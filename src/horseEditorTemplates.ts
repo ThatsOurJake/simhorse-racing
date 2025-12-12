@@ -63,6 +63,22 @@ export function renderMainTemplate(data: MainTemplateData): string {
       🎲 Randomize Full Race (8 Horses)
     </button>
 
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+      <button 
+        id="exportRace"
+        style="padding: 10px; background: #06a; color: white; border: none; cursor: pointer;"
+      >
+        📥 Export Race
+      </button>
+      <button 
+        id="importRace"
+        style="padding: 10px; background: #660; color: white; border: none; cursor: pointer;"
+      >
+        📤 Import Race
+      </button>
+    </div>
+    <input type="file" id="importFileInput" accept=".json" style="display: none;" />
+
     <div id="editorForm" style="display: ${data.editingHorseId ? 'block' : 'none'}; border-top: 2px solid #555; padding-top: 20px; margin-top: 20px;">
       ${data.editorFormHTML}
     </div>
@@ -120,6 +136,8 @@ export interface EditorFormData {
   speed: number;
   stamina: number;
   acceleration: number;
+  hat: string;
+  face: string;
 }
 
 export function renderEditorForm(data: EditorFormData): string {
@@ -133,6 +151,31 @@ export function renderEditorForm(data: EditorFormData): string {
       value="${data.horseName}"
       style="width: 100%; padding: 5px; background: #333; color: white; border: 1px solid #555; margin-bottom: 15px;"
     />
+
+    <label style="display: block; margin-bottom: 5px;">Hat:</label>
+    <select 
+      id="horseHat"
+      style="width: 100%; padding: 5px; background: #333; color: white; border: 1px solid #555; margin-bottom: 15px;"
+    >
+      <option value="horse-ears" ${data.hat === 'horse-ears' ? 'selected' : ''}>🐴 Horse Ears</option>
+      <option value="reindeer-antlers" ${data.hat === 'reindeer-antlers' ? 'selected' : ''}>🦌 Reindeer Antlers</option>
+      <option value="top-hat" ${data.hat === 'top-hat' ? 'selected' : ''}>🎩 Top Hat</option>
+      <option value="crown" ${data.hat === 'crown' ? 'selected' : ''}>👑 Crown</option>
+      <option value="propeller-hat" ${data.hat === 'propeller-hat' ? 'selected' : ''}>🚁 Propeller Hat</option>
+    </select>
+
+    <label style="display: block; margin-bottom: 5px;">Face:</label>
+    <select 
+      id="horseFace"
+      style="width: 100%; padding: 5px; background: #333; color: white; border: 1px solid #555; margin-bottom: 15px;"
+    >
+      <option value="happy" ${data.face === 'happy' ? 'selected' : ''}>😊 Happy Face</option>
+      <option value="innocent" ${data.face === 'innocent' ? 'selected' : ''}>👀 Innocent Eyes</option>
+      <option value="red-nose" ${data.face === 'red-nose' ? 'selected' : ''}>🔴 Red Nose</option>
+      <option value="angry" ${data.face === 'angry' ? 'selected' : ''}>😠 Angry Face</option>
+      <option value="shocked" ${data.face === 'shocked' ? 'selected' : ''}>😲 Shocked Face</option>
+      <option value="glasses" ${data.face === 'glasses' ? 'selected' : ''}>👓 Glasses</option>
+    </select>
 
     <label style="display: block; margin-bottom: 5px;">Speed (0-1):</label>
     <input 

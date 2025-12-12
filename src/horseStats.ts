@@ -4,12 +4,17 @@ export interface HorseStats {
   acceleration: number; // 0-1, how fast to reach max speed
 }
 
+export type HatType = 'horse-ears' | 'reindeer-antlers' | 'top-hat' | 'crown' | 'propeller-hat';
+export type FaceType = 'happy' | 'innocent' | 'red-nose' | 'angry' | 'shocked' | 'glasses';
+
 export interface HorseData {
   id: string;
   name: string;
   stats: HorseStats;
   baseSpeed: number; // Random speed assigned from seed (6-10 units/sec)
   color: number; // Cube color for now
+  hat: HatType;
+  face: FaceType;
 }
 
 export interface SpeedPoint {

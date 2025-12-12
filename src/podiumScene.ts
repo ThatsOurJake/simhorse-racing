@@ -205,7 +205,7 @@ export class PodiumScene {
 
         // Add name label above horse
         const nameLabel = this.createNameLabel(horse.data.name);
-        nameLabel.position.set(pos.x, pos.y + 1.5, 0);
+        nameLabel.position.set(pos.x, pos.y + 2.2, 0);
         nameLabel.userData.isPodiumNameLabel = true;
         this.scene.add(nameLabel);
       }

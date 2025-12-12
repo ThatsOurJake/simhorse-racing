@@ -16,6 +16,7 @@ import {
   type HorseItemData,
   type EditorFormData,
 } from './horseEditorTemplates';
+import { validateRaceConfig, type RaceConfig } from './raceConfigSchema';
 
 export class HorseEditor {
   private container: HTMLDivElement;
@@ -123,6 +124,8 @@ export class HorseEditor {
       speed: horse.stats.speed,
       stamina: horse.stats.stamina,
       acceleration: horse.stats.acceleration,
+      hat: horse.hat,
+      face: horse.face,
     };
 
     return renderEditorForm(formData);
@@ -161,6 +164,20 @@ export class HorseEditor {
     const randomizeRaceBtn = container.querySelector('#randomizeRace');
     if (randomizeRaceBtn) {
       randomizeRaceBtn.addEventListener('click', () => this.randomizeFullRace());
+    }
+
+    // Export race button
+    const exportBtn = container.querySelector('#exportRace');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => this.exportRace());
+    }
+
+    // Import race button
+    const importBtn = container.querySelector('#importRace');
+    const importFileInput = container.querySelector('#importFileInput') as HTMLInputElement;
+    if (importBtn && importFileInput) {
+      importBtn.addEventListener('click', () => importFileInput.click());
+      importFileInput.addEventListener('change', (e) => this.handleImportFile(e));
     }
 
     // Delete horse buttons
@@ -229,6 +246,8 @@ export class HorseEditor {
       stats: generateRandomStats(),
       baseSpeed: generateBaseSpeed(this.raceSeed, horseIndex),
       color: this.generateHorseColor(horseIndex),
+      hat: 'horse-ears',
+      face: 'happy',
     };
 
     this.horses.push(horse);
@@ -254,12 +273,21 @@ export class HorseEditor {
 
     // Add 8 random horses
     for (let i = 0; i < 8; i++) {
+      const hats: ('horse-ears' | 'reindeer-antlers' | 'top-hat' | 'crown' | 'propeller-hat')[] = [
+        'horse-ears', 'reindeer-antlers', 'top-hat', 'crown', 'propeller-hat'
+      ];
+      const faces: ('happy' | 'innocent' | 'red-nose' | 'angry' | 'shocked' | 'glasses')[] = [
+        'happy', 'innocent', 'red-nose', 'angry', 'shocked', 'glasses'
+      ];
+
       const horse: HorseData = {
         id: `horse-${Date.now()}-${Math.random()}`,
         name: this.generateRandomName(),
         stats: generateRandomStats(),
         baseSpeed: generateBaseSpeed(this.raceSeed, i),
         color: this.generateHorseColor(i),
+        hat: hats[Math.floor(Math.random() * hats.length)],
+        face: faces[Math.floor(Math.random() * faces.length)],
       };
       this.horses.push(horse);
     }
@@ -284,6 +312,8 @@ export class HorseEditor {
     const speedInput = this.container.querySelector('#horseSpeed') as HTMLInputElement;
     const staminaInput = this.container.querySelector('#horseStamina') as HTMLInputElement;
     const accelInput = this.container.querySelector('#horseAcceleration') as HTMLInputElement;
+    const hatSelect = this.container.querySelector('#horseHat') as HTMLSelectElement;
+    const faceSelect = this.container.querySelector('#horseFace') as HTMLSelectElement;
 
     const oldSpeed = horse.stats.speed;
     const newSpeed = this.clamp(parseFloat(speedInput.value) || 0.5, 0, 1);
@@ -292,6 +322,8 @@ export class HorseEditor {
     horse.stats.speed = newSpeed;
     horse.stats.stamina = this.clamp(parseFloat(staminaInput.value) || 0.5, 0, 1);
     horse.stats.acceleration = this.clamp(parseFloat(accelInput.value) || 0.5, 0, 1);
+    horse.hat = hatSelect.value as 'horse-ears' | 'reindeer-antlers' | 'top-hat';
+    horse.face = faceSelect.value as 'happy' | 'innocent' | 'red-nose';
 
     // Regenerate base speed only if max speed changed
     if (oldSpeed !== newSpeed) {
@@ -393,6 +425,72 @@ export class HorseEditor {
   private notifyHorsesChanged(): void {
     if (this.onHorsesChanged) {
       this.onHorsesChanged(this.horses);
+    }
+  }
+
+  private exportRace(): void {
+    const raceConfig: RaceConfig = {
+      version: '1.0',
+      raceSeed: this.raceSeed,
+      horses: this.horses,
+    };
+
+    const jsonString = JSON.stringify(raceConfig, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `reindeer-race-${Date.now()}.json`;
+    link.click();
+
+    URL.revokeObjectURL(url);
+  }
+
+  private async handleImportFile(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const json = JSON.parse(text);
+
+      // Validate the file
+      const validation = validateRaceConfig(json);
+      if (!validation.success) {
+        const errorMessage = validation.issues
+          ? `${validation.error}:\n${validation.issues.join('\n')}`
+          : validation.error;
+        alert(errorMessage);
+        input.value = ''; // Reset file input
+        return;
+      }
+
+      // Check if we need confirmation
+      if (this.horses.length > 0) {
+        const confirmed = confirm(
+          `This will replace your current ${this.horses.length} horse(s). Continue?`
+        );
+        if (!confirmed) {
+          input.value = ''; // Reset file input
+          return;
+        }
+      }
+
+      // Import the race
+      this.horses = validation.data.horses;
+      this.raceSeed = validation.data.raceSeed;
+      this.editingHorseId = null;
+      this.notifyHorsesChanged();
+      this.updateUI(this.container);
+
+      alert('✅ Race imported successfully!');
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Invalid JSON file format';
+      alert(`❌ Import Failed\n\n${errorMsg}`);
+    } finally {
+      input.value = ''; // Reset file input
     }
   }
 

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { CountdownOverlay } from './countdownOverlay';
 import { RaceTrack } from './raceTrack';
 import { calculateSpeedCurve } from './horseStats';
+import { createHat, createFace } from './horseAccessories';
 import type { HorseData, SpeedPoint } from './horseStats';
 
 export const RaceState = {
@@ -79,6 +80,17 @@ export class RaceManager {
       const geometry = new THREE.BoxGeometry(1, 1, 1);
       const material = new THREE.MeshLambertMaterial({ color: horseData.color });
       const mesh = new THREE.Mesh(geometry, material);
+
+      // Rotate horse 90 degrees right so front faces forward along track
+      mesh.rotation.y = Math.PI / 2;
+
+      // Add hat accessory
+      const hat = createHat(horseData.hat, horseData.color);
+      mesh.add(hat);
+
+      // Add face accessory
+      const faceAccessories = createFace(horseData.face, mesh);
+      faceAccessories.forEach(accessory => mesh.add(accessory));
 
       // Create name label using canvas texture
       const nameLabel = this.createNameLabel(horseData.name);
@@ -196,7 +208,7 @@ export class RaceManager {
       if (horse.mesh.userData.nameLabel) {
         const nameLabel = horse.mesh.userData.nameLabel as THREE.Sprite;
         nameLabel.position.x = position.x;
-        nameLabel.position.y = position.y + 1.5; // Position above horse
+        nameLabel.position.y = position.y + 2.2; // Position above horse and hat
         nameLabel.position.z = position.z;
       }
     });
@@ -306,7 +318,7 @@ export class RaceManager {
       if (horse.mesh.userData.nameLabel) {
         const nameLabel = horse.mesh.userData.nameLabel as THREE.Sprite;
         nameLabel.position.x = position.x;
-        nameLabel.position.y = position.y + 1.5; // Position above horse
+        nameLabel.position.y = position.y + 2.2; // Position above horse and hat
         nameLabel.position.z = position.z;
       }
     });

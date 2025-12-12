@@ -42,8 +42,8 @@ export class CameraController {
       Math.pow(trackConfig.length, 2) +
       Math.pow((trackConfig.radius + trackConfig.width) * 2, 2)
     );
-    const orbitalHeight = trackDiagonal * 0.6; // 60% of diagonal for closer view
-    const orbitalDistance = trackDiagonal * 0.65; // 65% of diagonal for zoomed in angle
+    const orbitalHeight = trackDiagonal * 0.4; // 40% of diagonal for closer view
+    const orbitalDistance = trackDiagonal * 0.6; // 60% of diagonal for zoomed in angle
     this.ORBITAL_POSITION = new THREE.Vector3(0, orbitalHeight, orbitalDistance);
     this.ORBITAL_LOOKAT = new THREE.Vector3(0, 0, 0);
 

@@ -165,14 +165,11 @@ export const ridersOverlayStyles = `
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.95);
-  color: white;
-  padding: 40px;
-  box-sizing: border-box;
-  overflow-y: auto;
-  font-family: Arial, sans-serif;
-  z-index: 1500;
+  background: rgba(0, 0, 0, 0.85);
   display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1500;
 `;
 
 export interface RiderData {
@@ -182,45 +179,50 @@ export interface RiderData {
   stamina: number;
   acceleration: number;
   winProbability: number;
+  previewImage?: string;
 }
 
 export function renderRidersContent(riders: RiderData[]): string {
   const ridersHTML = riders
     .map((rider) => {
       const colorHex = '#' + rider.color.toString(16).padStart(6, '0');
+      const previewHTML = rider.previewImage
+        ? `<img src="${rider.previewImage}" style="width: 100%; height: 120px; object-fit: contain; background: #000; border-radius: 4px; margin-bottom: 10px;" />`
+        : `<div style="width: 100%; height: 120px; background: #000; border-radius: 4px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; color: #666;">No Preview</div>`;
+
       return `
         <div style="
           background: rgba(255, 255, 255, 0.05);
-          padding: 20px;
-          margin-bottom: 15px;
-          border-left: 6px solid ${colorHex};
-          border-radius: 4px;
+          padding: 15px;
+          border: 2px solid ${colorHex};
+          border-radius: 8px;
         ">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <h3 style="margin: 0; font-size: 24px;">${rider.name}</h3>
-            <div style="
-              background: ${colorHex};
-              color: black;
-              padding: 8px 16px;
-              border-radius: 20px;
-              font-weight: bold;
-              font-size: 18px;
-            ">
-              ${(rider.winProbability * 100).toFixed(1)}%
-            </div>
+          ${previewHTML}
+          <h3 style="margin: 0 0 8px 0; font-size: 18px; text-align: center;">${rider.name}</h3>
+          <div style="
+            background: ${colorHex};
+            color: black;
+            padding: 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 16px;
+            text-align: center;
+            margin-bottom: 10px;
+          ">
+            ${(rider.winProbability * 100).toFixed(1)}% Win Chance
           </div>
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px;">
-            <div>
-              <div style="color: #aaa; font-size: 12px; margin-bottom: 5px;">SPEED</div>
-              <div style="font-size: 20px; font-weight: bold;">${(rider.speed * 100).toFixed(0)}%</div>
+          <div style="display: flex; justify-content: space-between; gap: 8px; font-size: 11px;">
+            <div style="flex: 1; text-align: center;">
+              <div style="color: #aaa; margin-bottom: 3px;">SPD</div>
+              <div style="font-weight: bold;">${(rider.speed * 100).toFixed(0)}%</div>
             </div>
-            <div>
-              <div style="color: #aaa; font-size: 12px; margin-bottom: 5px;">STAMINA</div>
-              <div style="font-size: 20px; font-weight: bold;">${(rider.stamina * 100).toFixed(0)}%</div>
+            <div style="flex: 1; text-align: center;">
+              <div style="color: #aaa; margin-bottom: 3px;">STA</div>
+              <div style="font-weight: bold;">${(rider.stamina * 100).toFixed(0)}%</div>
             </div>
-            <div>
-              <div style="color: #aaa; font-size: 12px; margin-bottom: 5px;">ACCELERATION</div>
-              <div style="font-size: 20px; font-weight: bold;">${(rider.acceleration * 100).toFixed(0)}%</div>
+            <div style="flex: 1; text-align: center;">
+              <div style="color: #aaa; margin-bottom: 3px;">ACC</div>
+              <div style="font-weight: bold;">${(rider.acceleration * 100).toFixed(0)}%</div>
             </div>
           </div>
         </div>
@@ -229,14 +231,34 @@ export function renderRidersContent(riders: RiderData[]): string {
     .join('');
 
   return `
-    <h1 style="text-align: center; margin-bottom: 30px; font-size: 36px; color: #4ecdc4;">
-      🎄 RIDERS ROSTER 🎄
-    </h1>
-    <div style="max-width: 1200px; margin: 0 auto;">
-      ${ridersHTML}
-    </div>
-    <div style="text-align: center; margin-top: 30px; color: #888; font-size: 14px;">
-      Press 'A' to return to main view
+    <div style="
+      background: rgba(0, 0, 0, 0.95);
+      color: white;
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    ">
+      <h1 style="text-align: center; margin: 0 0 25px 0; font-size: 32px; color: #4ecdc4;">
+        RIDERS ROSTER
+      </h1>
+      <div style="
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        margin-bottom: 20px;
+      ">
+        ${ridersHTML}
+      </div>
+      <div style="text-align: center; color: #aaa; font-size: 12px; padding: 10px 0; border-top: 1px solid #333;">
+        <span style="color: #4ecdc4;">SPD</span> = Speed &nbsp;|&nbsp; <span style="color: #4ecdc4;">STA</span> = Stamina &nbsp;|&nbsp; <span style="color: #4ecdc4;">ACC</span> = Acceleration
+      </div>
+      <div style="text-align: center; color: #888; font-size: 14px; padding-top: 10px;">
+        Press <span style="color: #4ecdc4; font-weight: bold;">A</span> to close and return to track
+      </div>
     </div>
   `;
 }

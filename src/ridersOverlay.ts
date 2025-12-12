@@ -1,5 +1,7 @@
+import * as THREE from 'three';
 import type { HorseData } from './horseStats';
 import { ridersOverlayStyles, renderRidersContent, type RiderData } from './overlayTemplates';
+import { createHat, createFace } from './horseAccessories';
 
 export class RidersOverlay {
   private overlayElement: HTMLDivElement;
@@ -15,6 +17,64 @@ export class RidersOverlay {
     overlay.id = 'riders-overlay';
     overlay.style.cssText = ridersOverlayStyles;
     return overlay;
+  }
+
+  /**
+   * Generate a preview image of a horse with its accessories
+   */
+  private generateHorsePreview(horse: HorseData): string {
+    // Create temporary scene and camera
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+    camera.position.set(0, 1, 3);
+    camera.lookAt(0, 0, 0);
+
+    // Add lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(5, 10, 7);
+    scene.add(directionalLight);
+
+    // Create horse cube
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const material = new THREE.MeshLambertMaterial({ color: horse.color });
+    const horseMesh = new THREE.Mesh(geometry, material);
+    horseMesh.rotation.y = 0; // Face forward
+    scene.add(horseMesh);
+
+    // Add hat
+    const hat = createHat(horse.hat, horse.color);
+    horseMesh.add(hat);
+
+    // Add face
+    const faceAccessories = createFace(horse.face, horseMesh);
+    faceAccessories.forEach(accessory => horseMesh.add(accessory));
+
+    // Create renderer
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: true
+    });
+    renderer.setSize(256, 256);
+    renderer.setClearColor(0x000000, 1);
+
+    // Render
+    renderer.render(scene, camera);
+
+    // Convert to data URL
+    const dataURL = canvas.toDataURL('image/png');
+
+    // Cleanup
+    geometry.dispose();
+    material.dispose();
+    renderer.dispose();
+
+    return dataURL;
   }
 
   /**
@@ -71,6 +131,7 @@ export class RidersOverlay {
       stamina: horse.stats.stamina,
       acceleration: horse.stats.acceleration,
       winProbability: (odds.get(horse.id) ?? 0) / 100,
+      previewImage: this.generateHorsePreview(horse),
     }));
 
     this.overlayElement.innerHTML = renderRidersContent(ridersData);
@@ -78,7 +139,7 @@ export class RidersOverlay {
 
   public show(): void {
     this.isVisible = true;
-    this.overlayElement.style.display = 'block';
+    this.overlayElement.style.display = 'flex';
   }
 
   public hide(): void {
