@@ -19,6 +19,7 @@ export interface Horse {
   currentSpeed: number; // Current speed (from speed curve)
   speedCurve: SpeedPoint[]; // Pre-calculated speed curve
   hasFinished: boolean;
+  finishTime: number | null; // Time when horse finished (null if not finished)
   laneOffset: number; // Offset from inner edge of track
   data: HorseData; // Reference to horse data
   speedVariance: number; // Current speed variance multiplier (0.85-1.15)
@@ -33,6 +34,7 @@ export class RaceManager {
   private raceTrack: RaceTrack;
   private trackLength: number;
   private raceSeed: number = 0; // For seeded randomness
+  private raceTime: number = 0; // Current race time in seconds
 
   constructor(raceTrack: RaceTrack) {
     this.raceTrack = raceTrack;
@@ -79,6 +81,7 @@ export class RaceManager {
         currentSpeed: speedCurve[0].speed,
         speedCurve,
         hasFinished: false,
+        finishTime: null,
         laneOffset,
         data: horseData,
         speedVariance: 1.0,
@@ -107,8 +110,9 @@ export class RaceManager {
       return; // Race already in progress
     }
 
-    // Reset all horses
+    // Reset all horses and race time
     this.resetHorses();
+    this.raceTime = 0;
 
     // Start countdown
     this.state = RaceState.COUNTDOWN;
@@ -122,6 +126,7 @@ export class RaceManager {
     this.horses.forEach((horse) => {
       horse.progress = 0;
       horse.hasFinished = false;
+      horse.finishTime = null;
       horse.currentSpeed = horse.speedCurve[0].speed;
       horse.speedVariance = 1.0;
       horse.varianceTimer = 0;
@@ -138,6 +143,9 @@ export class RaceManager {
     if (this.state !== RaceState.RACING) {
       return;
     }
+
+    // Update race time
+    this.raceTime += deltaTime;
 
     let allFinished = true;
 
@@ -179,7 +187,10 @@ export class RaceManager {
         // Check if finished lap
         if (horse.progress >= this.trackLength) {
           horse.progress = this.trackLength;
-          horse.hasFinished = true;
+          if (!horse.hasFinished) {
+            horse.hasFinished = true;
+            horse.finishTime = this.raceTime;
+          }
         } else {
           allFinished = false;
         }
@@ -262,6 +273,38 @@ export class RaceManager {
 
   public getHorseProgressList(): number[] {
     return this.horses.map((horse) => horse.progress);
+  }
+
+  public getRaceTime(): number {
+    return this.raceTime;
+  }
+
+  public getLeaderboard(): { position: number; name: string; progress: number }[] {
+    // Sort horses: finished horses by finish time (ascending), then unfinished by progress (descending)
+    const sorted = [...this.horses]
+      .map((horse) => ({
+        name: horse.data.name,
+        progress: horse.progress,
+        hasFinished: horse.hasFinished,
+        finishTime: horse.finishTime,
+      }))
+      .sort((a, b) => {
+        // Finished horses come first, sorted by finish time
+        if (a.hasFinished && b.hasFinished) {
+          return (a.finishTime ?? 0) - (b.finishTime ?? 0);
+        }
+        if (a.hasFinished) return -1;
+        if (b.hasFinished) return 1;
+        // Unfinished horses sorted by progress
+        return b.progress - a.progress;
+      });
+
+    // Add positions
+    return sorted.map((entry, index) => ({
+      position: index + 1,
+      name: entry.name,
+      progress: entry.progress,
+    }));
   }
 
   public getTrackLength(): number {

@@ -84,6 +84,13 @@ export class HorseEditor {
         Add Horse (${this.horses.length}/8)
       </button>
 
+      <button 
+        id="randomizeRace"
+        style="padding: 10px; background: #a06; color: white; border: none; cursor: pointer; width: 100%; margin-bottom: 10px;"
+      >
+        🎲 Randomize Full Race (8 Horses)
+      </button>
+
       <div id="editorForm" style="display: ${this.editingHorseId ? 'block' : 'none'}; border-top: 2px solid #555; padding-top: 20px; margin-top: 20px;">
         ${this.renderEditorForm()}
       </div>
@@ -238,6 +245,12 @@ export class HorseEditor {
       addBtn.addEventListener('click', () => this.addHorse());
     }
 
+    // Randomize race button
+    const randomizeRaceBtn = container.querySelector('#randomizeRace');
+    if (randomizeRaceBtn) {
+      randomizeRaceBtn.addEventListener('click', () => this.randomizeFullRace());
+    }
+
     // Delete horse buttons
     const deleteButtons = container.querySelectorAll('.deleteHorse');
     deleteButtons.forEach((btn) => {
@@ -312,6 +325,27 @@ export class HorseEditor {
     if (this.editingHorseId === horseId) {
       this.editingHorseId = null;
     }
+    this.notifyHorsesChanged();
+    this.updateUI(this.container);
+  }
+
+  private randomizeFullRace(): void {
+    // Clear all existing horses
+    this.horses = [];
+    this.editingHorseId = null;
+
+    // Add 8 random horses
+    for (let i = 0; i < 8; i++) {
+      const horse: HorseData = {
+        id: `horse-${Date.now()}-${Math.random()}`,
+        name: generateHorseName(i),
+        stats: generateRandomStats(),
+        baseSpeed: generateBaseSpeed(this.raceSeed, i),
+        color: this.generateHorseColor(i),
+      };
+      this.horses.push(horse);
+    }
+
     this.notifyHorsesChanged();
     this.updateUI(this.container);
   }

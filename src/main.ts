@@ -5,6 +5,7 @@ import { CameraController, CameraMode } from './cameraController';
 import { DebugOverlay } from './debugOverlay';
 import { RaceManager } from './raceManager';
 import { HorseEditor } from './horseEditor';
+import { LeaderboardOverlay } from './leaderboardOverlay';
 import type { HorseData } from './horseStats';
 
 // Scene setup
@@ -66,6 +67,9 @@ const cameraController = new CameraController(camera);
 // Initialize debug overlay
 const debugOverlay = new DebugOverlay();
 
+// Initialize leaderboard overlay
+const leaderboardOverlay = new LeaderboardOverlay();
+
 // Initialize horse editor
 const trackLength = raceManager.getTrackLength();
 const horseEditor = new HorseEditor(trackLength);
@@ -91,6 +95,7 @@ window.addEventListener('keydown', (event) => {
   if (key === 'p') {
     if (!raceManager.isRacing() && raceManager.getHorses().length > 0) {
       horseEditor.close(); // Close editor during race
+      leaderboardOverlay.reset(); // Reset leaderboard
       raceManager.startRace();
       console.log('Race starting...');
     }
@@ -102,6 +107,12 @@ window.addEventListener('keydown', (event) => {
     if (!raceManager.isRacing()) {
       horseEditor.toggle();
     }
+    return;
+  }
+
+  // Toggle leaderboard with 'L'
+  if (key === 'l') {
+    leaderboardOverlay.toggle();
     return;
   }
 
@@ -147,6 +158,13 @@ function animate() {
 
   // Update race (moves horses)
   raceManager.update(deltaTime);
+
+  // Update leaderboard if racing
+  if (raceManager.isRacing()) {
+    const raceTime = raceManager.getRaceTime();
+    const leaderboard = raceManager.getLeaderboard();
+    leaderboardOverlay.update(raceTime, leaderboard);
+  }
 
   // Get current horses and their data
   const horses = raceManager.getHorses();

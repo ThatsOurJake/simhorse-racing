@@ -57,6 +57,7 @@ export class DebugOverlay {
         </div>
         <div style="margin-left: 10px;">
           <div><span style="color: #ffff00;">E</span> - Toggle Horse Editor</div>
+          <div><span style="color: #ffff00;">L</span> - Toggle Leaderboard</div>
           <div><span style="color: #ffff00;">P</span> - Start Race</div>
         </div>
       </div>
