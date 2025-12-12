@@ -3,6 +3,7 @@ import './style.css';
 import { RaceTrack } from './raceTrack';
 import { CameraController, CameraMode } from './cameraController';
 import { DebugOverlay } from './debugOverlay';
+import { RaceManager } from './raceManager';
 
 // Scene setup
 const scene = new THREE.Scene();
@@ -54,6 +55,9 @@ scene.add(ground);
 const raceTrack = new RaceTrack();
 scene.add(raceTrack.getGroup());
 
+// Initialize race manager
+const raceManager = new RaceManager(raceTrack);
+
 // Initialize camera controller
 const cameraController = new CameraController(camera);
 
@@ -61,10 +65,13 @@ const cameraController = new CameraController(camera);
 const debugOverlay = new DebugOverlay();
 
 // Add starting position markers for visualization (temporary horses)
-const startingPositions = raceTrack.getStartingPositions(8);
+const numHorses = 8;
+const startingPositions = raceTrack.getStartingPositions(numHorses);
 const horseMarkers: THREE.Mesh[] = [];
+const trackConfig = raceTrack.getConfig();
+const laneSpacing = trackConfig.width / (numHorses + 1);
 
-startingPositions.forEach((pos) => {
+startingPositions.forEach((pos, index) => {
   const markerGeometry = new THREE.BoxGeometry(0.8, 0.8, 0.8);
   const markerMaterial = new THREE.MeshStandardMaterial({
     color: 0xff0000
@@ -74,6 +81,12 @@ startingPositions.forEach((pos) => {
   marker.castShadow = true;
   scene.add(marker);
   horseMarkers.push(marker);
+
+  // Calculate lane offset from inner edge for this horse
+  const laneOffset = laneSpacing * (index + 1);
+
+  // Register horse with race manager
+  raceManager.addHorse(marker, laneOffset);
 });
 
 // Keyboard controls
@@ -83,6 +96,15 @@ window.addEventListener('keydown', (event) => {
   // Debug overlay toggle
   if (key === 'd') {
     debugOverlay.toggle();
+    return;
+  }
+
+  // Start race with 'P'
+  if (key === 'p') {
+    if (!raceManager.isRacing()) {
+      raceManager.startRace();
+      console.log('Race starting...');
+    }
     return;
   }
 
@@ -110,8 +132,18 @@ window.addEventListener('resize', () => {
 });
 
 // Animation loop
+let lastTime = performance.now();
+
 function animate() {
   requestAnimationFrame(animate);
+
+  // Calculate delta time
+  const currentTime = performance.now();
+  const deltaTime = (currentTime - lastTime) / 1000; // Convert to seconds
+  lastTime = currentTime;
+
+  // Update race (moves horses)
+  raceManager.update(deltaTime);
 
   // Get current horse positions
   const horsePositions = horseMarkers.map((marker) => marker.position);

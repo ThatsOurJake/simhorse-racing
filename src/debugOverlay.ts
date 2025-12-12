@@ -56,7 +56,7 @@ export class DebugOverlay {
           <strong style="color: #00ffff;">Race Controls:</strong>
         </div>
         <div style="margin-left: 10px;">
-          <div style="color: #888;">Coming soon...</div>
+          <div><span style="color: #ffff00;">P</span> - Start Race</div>
         </div>
       </div>
     `;

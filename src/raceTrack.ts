@@ -307,9 +307,11 @@ export class RaceTrack {
   /**
    * Get a position on the track based on progress distance traveled.
    * Progress 0 starts at the starting line, increases as you go around the track.
-   * Returns a position in the center of the racing surface.
+   * @param progress - Distance traveled around track
+   * @param laneOffset - Offset from inner edge (0 = inner barrier, this.config.width = outer barrier)
+   * @returns Position on the track
    */
-  public getTrackPosition(progress: number): THREE.Vector3 {
+  public getTrackPosition(progress: number, laneOffset: number = this.config.width / 2): THREE.Vector3 {
     const totalLength = this.config.length * 2 + Math.PI * this.config.radius * 2;
     const normalizedProgress = (progress % totalLength) / totalLength;
 
@@ -321,31 +323,36 @@ export class RaceTrack {
     const section3 = (straightLength * 2 + curveLength) / totalLength; // Top straight
     // Remaining is left curve
 
-    const centerZ = this.config.radius + this.config.width / 2;
+    // Calculate Z offset from inner edge
+    const zFromInner = this.config.radius + laneOffset;
 
     if (normalizedProgress < section1) {
-      // Bottom straight - moving left (-X direction)
+      // Bottom straight - moving right (+X direction)
       const t = normalizedProgress / section1;
       const x = -this.config.length / 2 + straightLength * t;
-      return new THREE.Vector3(x, 0, centerZ);
+      return new THREE.Vector3(x, 0, zFromInner);
     } else if (normalizedProgress < section2) {
-      // Right curve
+      // Right curve - connects bottom straight to top straight
       const t = (normalizedProgress - section1) / (section2 - section1);
-      const angle = -Math.PI / 2 + Math.PI * t;
-      const x = Math.cos(angle) * this.config.radius + this.config.length / 2;
-      const z = Math.sin(angle) * this.config.radius;
+      const angle = Math.PI / 2 - Math.PI * t; // Start at +π/2 (bottom), end at -π/2 (top)
+      // Use lane-specific radius
+      const laneRadius = this.config.radius + laneOffset;
+      const x = Math.cos(angle) * laneRadius + this.config.length / 2;
+      const z = Math.sin(angle) * laneRadius;
       return new THREE.Vector3(x, 0, z);
     } else if (normalizedProgress < section3) {
-      // Top straight - moving right (+X direction)
+      // Top straight - moving left (-X direction)
       const t = (normalizedProgress - section2) / (section3 - section2);
       const x = this.config.length / 2 - straightLength * t;
-      return new THREE.Vector3(x, 0, -centerZ);
+      return new THREE.Vector3(x, 0, -zFromInner);
     } else {
-      // Left curve
+      // Left curve - connects top straight to bottom straight
       const t = (normalizedProgress - section3) / (1 - section3);
-      const angle = Math.PI / 2 + Math.PI * t;
-      const x = Math.cos(angle) * this.config.radius - this.config.length / 2;
-      const z = Math.sin(angle) * this.config.radius;
+      const angle = -Math.PI / 2 - Math.PI * t; // Start at -π/2 (top), end at -3π/2 (bottom)
+      // Use lane-specific radius
+      const laneRadius = this.config.radius + laneOffset;
+      const x = Math.cos(angle) * laneRadius - this.config.length / 2;
+      const z = Math.sin(angle) * laneRadius;
       return new THREE.Vector3(x, 0, z);
     }
   }
