@@ -25,7 +25,7 @@ export class HorseEditor {
   private onHorsesChanged: ((horses: HorseData[]) => void) | null = null;
   private speedGraph: SpeedGraph;
   private trackLength: number;
-  private isOpen: boolean = true;
+  private isOpen: boolean = false;
   private editingHorseId: string | null = null;
   private nameData: { descriptiveWords: string[]; christmasItems: string[] } | null = null;
 
@@ -69,6 +69,7 @@ export class HorseEditor {
   private createUI(): HTMLDivElement {
     const container = document.createElement('div');
     container.style.cssText = containerStyles;
+    container.style.transform = 'translateX(100%)'; // Start hidden
 
     this.updateUI(container);
     return container;

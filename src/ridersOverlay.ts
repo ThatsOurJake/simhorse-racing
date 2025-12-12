@@ -106,9 +106,28 @@ export class RidersOverlay {
   public update(horses: HorseData[]): void {
     if (horses.length === 0) {
       this.overlayElement.innerHTML = `
-        <div style="text-align: center;">
-          <h2 style="color: #4ecdc4; margin-top: 0;">RIDERS ROSTER</h2>
-          <p>No horses in race. Press 'E' to add horses.</p>
+        <div style="
+          background: rgba(0, 0, 0, 0.95);
+          color: white;
+          padding: 30px;
+          border-radius: 12px;
+          max-width: 600px;
+          text-align: center;
+          box-sizing: border-box;
+          font-family: Arial, sans-serif;
+        ">
+          <h1 style="margin: 0 0 20px 0; font-size: 32px; color: #4ecdc4;">
+            🎄 RIDERS ROSTER 🎄
+          </h1>
+          <p style="font-size: 16px; color: #aaa; margin-bottom: 10px;">
+            No horses in race.
+          </p>
+          <p style="font-size: 14px; color: #888; margin-bottom: 30px;">
+            Return to the main track and press <span style="color: #4ecdc4; font-weight: bold;">E</span> to open the horse editor.
+          </p>
+          <div style="text-align: center; color: #888; font-size: 14px; padding-top: 20px; border-top: 1px solid #333;">
+            Press <span style="color: #4ecdc4; font-weight: bold;">A</span> to close and return to track
+          </div>
         </div>
       `;
       return;
