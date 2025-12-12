@@ -35,22 +35,23 @@ export class RaceTrack {
       metalness: 0.1
     });
 
-    // Create straight sections
+    // Create straight sections with slight overlap to avoid seams
+    const overlap = 0.2; // Small overlap to eliminate seams
     const straightGeometry = new THREE.BoxGeometry(
-      this.config.length,
+      this.config.length + overlap,
       0.1,
       this.config.width
     );
 
     // Top straight - positioned between inner and outer barriers
     const topStraight = new THREE.Mesh(straightGeometry, material);
-    topStraight.position.set(0, 0.05, -(this.config.radius + this.config.width / 2));
+    topStraight.position.set(0, 0, -(this.config.radius + this.config.width / 2));
     topStraight.receiveShadow = true;
     this.group.add(topStraight);
 
     // Bottom straight - positioned between inner and outer barriers
     const bottomStraight = new THREE.Mesh(straightGeometry, material);
-    bottomStraight.position.set(0, 0.05, this.config.radius + this.config.width / 2);
+    bottomStraight.position.set(0, 0, this.config.radius + this.config.width / 2);
     bottomStraight.receiveShadow = true;
     this.group.add(bottomStraight);
 
@@ -101,7 +102,7 @@ export class RaceTrack {
     const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
     const mesh = new THREE.Mesh(geometry, material);
     mesh.rotation.x = -Math.PI / 2;
-    mesh.position.y = 0.05;
+    mesh.position.y = 0; // Position at ground level, same as straight sections
     mesh.position.x = isRight ? this.config.length / 2 : -this.config.length / 2;
     mesh.receiveShadow = true;
 
