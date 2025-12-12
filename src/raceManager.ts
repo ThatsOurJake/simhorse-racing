@@ -123,10 +123,18 @@ export class RaceManager {
     // Create canvas for text
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d')!;
-    canvas.width = 256;
+
+    // Set up text style first to measure
+    context.font = 'bold 32px Arial';
+    const metrics = context.measureText(name);
+    const textWidth = metrics.width;
+    const padding = 20; // Padding on each side
+
+    // Set canvas dimensions based on text width
+    canvas.width = textWidth + padding * 2;
     canvas.height = 64;
 
-    // Set up text style
+    // Re-apply text style after resizing canvas
     context.font = 'bold 32px Arial';
     context.textAlign = 'center';
     context.textBaseline = 'middle';
@@ -143,7 +151,10 @@ export class RaceManager {
     const texture = new THREE.CanvasTexture(canvas);
     const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
     const sprite = new THREE.Sprite(spriteMaterial);
-    sprite.scale.set(2, 0.5, 1); // Adjust size
+
+    // Scale width proportionally to canvas width (base scale is for 256px width = 2 units)
+    const widthScale = (canvas.width / 256) * 2;
+    sprite.scale.set(widthScale, 0.5, 1);
 
     return sprite;
   }

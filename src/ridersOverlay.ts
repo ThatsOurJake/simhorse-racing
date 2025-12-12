@@ -1,4 +1,5 @@
 import type { HorseData } from './horseStats';
+import { ridersOverlayStyles, renderRidersContent, type RiderData } from './overlayTemplates';
 
 export class RidersOverlay {
   private overlayElement: HTMLDivElement;
@@ -12,24 +13,7 @@ export class RidersOverlay {
   private createOverlay(): HTMLDivElement {
     const overlay = document.createElement('div');
     overlay.id = 'riders-overlay';
-    overlay.style.cssText = `
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.95);
-      color: white;
-      padding: 30px;
-      font-family: 'Arial', sans-serif;
-      border-radius: 15px;
-      border: 3px solid #4ecdc4;
-      z-index: 1001;
-      display: none;
-      max-width: 900px;
-      max-height: 90vh;
-      overflow-y: auto;
-    `;
-
+    overlay.style.cssText = ridersOverlayStyles;
     return overlay;
   }
 
@@ -79,57 +63,17 @@ export class RidersOverlay {
       return oddsB - oddsA;
     });
 
-    let html = `
-      <div style="text-align: center; margin-bottom: 20px;">
-        <h2 style="color: #4ecdc4; margin: 0 0 10px 0; font-size: 28px;">🏇 RIDERS ROSTER 🏇</h2>
-        <p style="color: #999; margin: 0; font-size: 14px;">Press 'A' to return to race view</p>
-      </div>
-      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
-    `;
+    // Convert to RiderData format
+    const ridersData: RiderData[] = sortedHorses.map((horse) => ({
+      name: horse.name,
+      color: horse.color,
+      speed: horse.stats.speed,
+      stamina: horse.stats.stamina,
+      acceleration: horse.stats.acceleration,
+      winProbability: (odds.get(horse.id) ?? 0) / 100,
+    }));
 
-    sortedHorses.forEach((horse) => {
-      const winOdds = odds.get(horse.id) ?? 0;
-      const colorHex = '#' + horse.color.toString(16).padStart(6, '0');
-
-      html += `
-        <div style="
-          background: rgba(255, 255, 255, 0.05);
-          border: 2px solid ${colorHex};
-          border-radius: 10px;
-          padding: 15px;
-          display: flex;
-          align-items: center;
-          gap: 15px;
-        ">
-          <div style="
-            width: 50px;
-            height: 50px;
-            background: ${colorHex};
-            border-radius: 8px;
-            flex-shrink: 0;
-          "></div>
-          <div style="flex-grow: 1;">
-            <div style="font-weight: bold; font-size: 16px; margin-bottom: 5px;">${horse.name}</div>
-            <div style="font-size: 12px; color: #aaa; margin-bottom: 8px;">
-              Speed: ${(horse.stats.speed * 100).toFixed(0)}% | 
-              Stamina: ${(horse.stats.stamina * 100).toFixed(0)}% | 
-              Accel: ${(horse.stats.acceleration * 100).toFixed(0)}%
-            </div>
-            <div style="
-              font-size: 18px;
-              font-weight: bold;
-              color: #4ecdc4;
-            ">
-              ${winOdds.toFixed(1)}% to win
-            </div>
-          </div>
-        </div>
-      `;
-    });
-
-    html += `</div>`;
-
-    this.overlayElement.innerHTML = html;
+    this.overlayElement.innerHTML = renderRidersContent(ridersData);
   }
 
   public show(): void {

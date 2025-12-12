@@ -129,6 +129,46 @@ export class PodiumScene {
     }
   }
 
+  private createNameLabel(name: string): THREE.Sprite {
+    // Create canvas for text
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d')!;
+
+    // Set up text style first to measure
+    context.font = 'bold 32px Arial';
+    const metrics = context.measureText(name);
+    const textWidth = metrics.width;
+    const padding = 20; // Padding on each side
+
+    // Set canvas dimensions based on text width
+    canvas.width = textWidth + padding * 2;
+    canvas.height = 64;
+
+    // Re-apply text style after resizing canvas
+    context.font = 'bold 32px Arial';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+
+    // Draw background
+    context.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw text
+    context.fillStyle = '#ffffff';
+    context.fillText(name, canvas.width / 2, canvas.height / 2);
+
+    // Create sprite from canvas texture
+    const texture = new THREE.CanvasTexture(canvas);
+    const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+    const sprite = new THREE.Sprite(spriteMaterial);
+
+    // Scale width proportionally to canvas width (base scale is for 256px width = 2 units)
+    const widthScale = (canvas.width / 256) * 2;
+    sprite.scale.set(widthScale, 0.5, 1);
+
+    return sprite;
+  }
+
   public show(topThree: Horse[]): void {
     if (topThree.length === 0) {
       console.warn('No horses to display on podium');
@@ -139,9 +179,9 @@ export class PodiumScene {
     this.originalCameraPosition = this.mainCamera.position.clone();
     this.originalCameraRotation = this.mainCamera.rotation.clone();
 
-    // Clear any existing horse meshes from podium scene
+    // Clear any existing horse meshes and labels from podium scene
     this.scene.children.forEach((child) => {
-      if (child.userData.isPodiumHorse) {
+      if (child.userData.isPodiumHorse || child.userData.isPodiumNameLabel) {
         this.scene.remove(child);
       }
     });
@@ -162,6 +202,12 @@ export class PodiumScene {
         horseMesh.position.set(pos.x, pos.y, 0);
         horseMesh.userData.isPodiumHorse = true;
         this.scene.add(horseMesh);
+
+        // Add name label above horse
+        const nameLabel = this.createNameLabel(horse.data.name);
+        nameLabel.position.set(pos.x, pos.y + 1.5, 0);
+        nameLabel.userData.isPodiumNameLabel = true;
+        this.scene.add(nameLabel);
       }
     });
 
@@ -213,9 +259,9 @@ export class PodiumScene {
       this.mainCamera.rotation.copy(this.originalCameraRotation);
     }
 
-    // Remove podium horses from scene
+    // Remove podium horses and labels from scene
     this.scene.children.forEach((child) => {
-      if (child.userData.isPodiumHorse) {
+      if (child.userData.isPodiumHorse || child.userData.isPodiumNameLabel) {
         this.scene.remove(child);
       }
     });

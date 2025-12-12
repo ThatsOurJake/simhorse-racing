@@ -7,6 +7,15 @@ import {
 } from './horseStats';
 import type { HorseData, HorseStats } from './horseStats';
 import { SpeedGraph } from './speedGraph';
+import {
+  containerStyles,
+  renderMainTemplate,
+  renderHorseItem,
+  renderEmptyHorseList,
+  renderEditorForm,
+  type HorseItemData,
+  type EditorFormData,
+} from './horseEditorTemplates';
 
 export class HorseEditor {
   private container: HTMLDivElement;
@@ -17,6 +26,7 @@ export class HorseEditor {
   private trackLength: number;
   private isOpen: boolean = true;
   private editingHorseId: string | null = null;
+  private nameData: { descriptiveWords: string[]; christmasItems: string[] } | null = null;
 
   constructor(trackLength: number) {
     this.trackLength = trackLength;
@@ -24,6 +34,31 @@ export class HorseEditor {
     this.container = this.createUI();
     this.speedGraph = new SpeedGraph();
     document.body.appendChild(this.container);
+    this.loadNameData();
+  }
+
+  private async loadNameData(): Promise<void> {
+    try {
+      const response = await fetch('/horseNames.json');
+      this.nameData = await response.json();
+    } catch (error) {
+      console.error('Failed to load horse names:', error);
+    }
+  }
+
+  private generateRandomName(): string {
+    if (!this.nameData) {
+      return generateHorseName(this.raceSeed); // Fallback to old method
+    }
+
+    const descriptive = this.nameData.descriptiveWords[
+      Math.floor(Math.random() * this.nameData.descriptiveWords.length)
+    ];
+    const christmasItem = this.nameData.christmasItems[
+      Math.floor(Math.random() * this.nameData.christmasItems.length)
+    ];
+
+    return `${descriptive} ${christmasItem}`;
   }
 
   private generateRandomSeed(): number {
@@ -32,82 +67,27 @@ export class HorseEditor {
 
   private createUI(): HTMLDivElement {
     const container = document.createElement('div');
-    container.style.cssText = `
-      position: fixed;
-      top: 0;
-      right: 0;
-      width: 400px;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.9);
-      color: white;
-      padding: 20px;
-      box-sizing: border-box;
-      overflow-y: auto;
-      font-family: monospace;
-      z-index: 1000;
-      transition: transform 0.3s ease;
-    `;
+    container.style.cssText = containerStyles;
 
     this.updateUI(container);
     return container;
   }
 
   private updateUI(container: HTMLDivElement): void {
-    container.innerHTML = `
-      <h2 style="margin-top: 0;">Horse Editor</h2>
-      
-      <div style="margin-bottom: 20px;">
-        <label style="display: block; margin-bottom: 5px;">Race Seed:</label>
-        <input 
-          type="number" 
-          id="raceSeed" 
-          value="${this.raceSeed}"
-          style="width: 100%; padding: 5px; background: #333; color: white; border: 1px solid #555;"
-        />
-        <button 
-          id="randomizeSeed"
-          style="margin-top: 5px; padding: 5px 10px; background: #444; color: white; border: 1px solid #666; cursor: pointer; width: 100%;"
-        >
-          Randomize Seed
-        </button>
-      </div>
-
-      <div id="horseList" style="margin-bottom: 20px;">
-        ${this.renderHorseList()}
-      </div>
-
-      <button 
-        id="addHorse"
-        ${this.horses.length >= 8 ? 'disabled' : ''}
-        style="padding: 10px; background: #0a6; color: white; border: none; cursor: pointer; width: 100%; margin-bottom: 10px; ${this.horses.length >= 8 ? 'opacity: 0.5; cursor: not-allowed;' : ''}"
-      >
-        Add Horse (${this.horses.length}/8)
-      </button>
-
-      <button 
-        id="randomizeRace"
-        style="padding: 10px; background: #a06; color: white; border: none; cursor: pointer; width: 100%; margin-bottom: 10px;"
-      >
-        🎲 Randomize Full Race (8 Horses)
-      </button>
-
-      <div id="editorForm" style="display: ${this.editingHorseId ? 'block' : 'none'}; border-top: 2px solid #555; padding-top: 20px; margin-top: 20px;">
-        ${this.renderEditorForm()}
-      </div>
-
-      <div id="speedGraphContainer" style="margin-top: 20px; display: ${this.editingHorseId ? 'block' : 'none'};">
-        <h3 style="margin-bottom: 10px;">Speed Graph</h3>
-        <canvas id="speedGraphCanvas" width="360" height="200" style="background: #222; border: 1px solid #555;"></canvas>
-        <div id="raceTimeInfo" style="margin-top: 10px; color: #aaa; font-size: 12px;"></div>
-      </div>
-    `;
+    container.innerHTML = renderMainTemplate({
+      raceSeed: this.raceSeed,
+      horseListHTML: this.renderHorseList(),
+      horsesCount: this.horses.length,
+      editingHorseId: this.editingHorseId,
+      editorFormHTML: this.renderEditorForm(),
+    });
 
     this.attachEventListeners(container);
   }
 
   private renderHorseList(): string {
     if (this.horses.length === 0) {
-      return '<p style="color: #888;">No horses added yet. Click "Add Horse" to start.</p>';
+      return renderEmptyHorseList();
     }
 
     return this.horses
@@ -116,28 +96,18 @@ export class HorseEditor {
         const speedCurve = calculateSpeedCurve(horse, this.trackLength);
         const raceTime = calculateRaceTime(speedCurve);
 
-        return `
-      <div 
-        style="background: #222; padding: 10px; margin-bottom: 10px; border-left: 4px solid #${horse.color.toString(16).padStart(6, '0')}; cursor: pointer;"
-        data-horse-id="${horse.id}"
-        class="horse-item"
-      >
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span><strong>${horse.name}</strong></span>
-          <button 
-            class="deleteHorse" 
-            data-horse-id="${horse.id}"
-            style="background: #c33; color: white; border: none; padding: 5px 10px; cursor: pointer;"
-          >Delete</button>
-        </div>
-        <div style="font-size: 11px; color: #aaa; margin-top: 5px;">
-          Speed: ${horse.stats.speed.toFixed(2)} | Stamina: ${horse.stats.stamina.toFixed(2)} | Accel: ${horse.stats.acceleration.toFixed(2)}
-        </div>
-        <div style="font-size: 11px; color: #888;">
-          Base Speed: ${horse.baseSpeed.toFixed(2)} u/s | Est. Time: ${raceTime.toFixed(2)}s
-        </div>
-      </div>
-    `;
+        const horseData: HorseItemData = {
+          id: horse.id,
+          name: horse.name,
+          color: horse.color,
+          speed: horse.stats.speed,
+          stamina: horse.stats.stamina,
+          acceleration: horse.stats.acceleration,
+          baseSpeed: horse.baseSpeed,
+          raceTime: raceTime,
+        };
+
+        return renderHorseItem(horseData);
       })
       .join('');
   }
@@ -148,72 +118,14 @@ export class HorseEditor {
     const horse = this.horses.find((h) => h.id === this.editingHorseId);
     if (!horse) return '';
 
-    return `
-      <h3 style="margin-top: 0;">Editing: ${horse.name}</h3>
-      
-      <label style="display: block; margin-bottom: 5px;">Name:</label>
-      <input 
-        type="text" 
-        id="horseName" 
-        value="${horse.name}"
-        style="width: 100%; padding: 5px; background: #333; color: white; border: 1px solid #555; margin-bottom: 15px;"
-      />
+    const formData: EditorFormData = {
+      horseName: horse.name,
+      speed: horse.stats.speed,
+      stamina: horse.stats.stamina,
+      acceleration: horse.stats.acceleration,
+    };
 
-      <label style="display: block; margin-bottom: 5px;">Speed (0-1):</label>
-      <input 
-        type="number" 
-        id="horseSpeed" 
-        value="${horse.stats.speed}"
-        min="0"
-        max="1"
-        step="0.01"
-        style="width: 100%; padding: 5px; background: #333; color: white; border: 1px solid #555; margin-bottom: 15px;"
-      />
-
-      <label style="display: block; margin-bottom: 5px;">Stamina (0-1):</label>
-      <input 
-        type="number" 
-        id="horseStamina" 
-        value="${horse.stats.stamina}"
-        min="0"
-        max="1"
-        step="0.01"
-        style="width: 100%; padding: 5px; background: #333; color: white; border: 1px solid #555; margin-bottom: 15px;"
-      />
-
-      <label style="display: block; margin-bottom: 5px;">Acceleration (0-1):</label>
-      <input 
-        type="number" 
-        id="horseAcceleration" 
-        value="${horse.stats.acceleration}"
-        min="0"
-        max="1"
-        step="0.01"
-        style="width: 100%; padding: 5px; background: #333; color: white; border: 1px solid #555; margin-bottom: 15px;"
-      />
-
-      <button 
-        id="randomizeStats"
-        style="width: 100%; padding: 8px; background: #444; color: white; border: 1px solid #666; cursor: pointer; margin-bottom: 15px;"
-      >
-        🎲 Randomize Stats
-      </button>
-
-      <div style="display: flex; gap: 10px;">
-        <button 
-          id="saveHorse"
-          style="flex: 1; padding: 10px; background: #0a6; color: white; border: none; cursor: pointer;"
-        >
-          Save Changes
-        </button>
-        <button 
-          id="cancelEdit"
-          style="flex: 1; padding: 10px; background: #666; color: white; border: none; cursor: pointer;"
-        >
-          Cancel
-        </button>
-      </div>
-    `;
+    return renderEditorForm(formData);
   }
 
   private attachEventListeners(container: HTMLDivElement): void {
@@ -291,6 +203,12 @@ export class HorseEditor {
       randomizeStatsBtn.addEventListener('click', () => this.randomizeCurrentHorseStats());
     }
 
+    // Randomize name button
+    const randomizeNameBtn = container.querySelector('#randomizeName');
+    if (randomizeNameBtn) {
+      randomizeNameBtn.addEventListener('click', () => this.randomizeCurrentHorseName());
+    }
+
     // Live update for stat changes
     const statInputs = ['horseSpeed', 'horseStamina', 'horseAcceleration'];
     statInputs.forEach((inputId) => {
@@ -307,7 +225,7 @@ export class HorseEditor {
     const horseIndex = this.horses.length;
     const horse: HorseData = {
       id: `horse-${Date.now()}-${Math.random()}`,
-      name: generateHorseName(horseIndex),
+      name: this.generateRandomName(),
       stats: generateRandomStats(),
       baseSpeed: generateBaseSpeed(this.raceSeed, horseIndex),
       color: this.generateHorseColor(horseIndex),
@@ -338,7 +256,7 @@ export class HorseEditor {
     for (let i = 0; i < 8; i++) {
       const horse: HorseData = {
         id: `horse-${Date.now()}-${Math.random()}`,
-        name: generateHorseName(i),
+        name: this.generateRandomName(),
         stats: generateRandomStats(),
         baseSpeed: generateBaseSpeed(this.raceSeed, i),
         color: this.generateHorseColor(i),
@@ -409,6 +327,15 @@ export class HorseEditor {
     accelInput.value = randomStats.acceleration.toFixed(3);
 
     this.updateSpeedGraph();
+  }
+
+  private randomizeCurrentHorseName(): void {
+    if (!this.editingHorseId) return;
+
+    const nameInput = this.container.querySelector('#horseName') as HTMLInputElement;
+    if (!nameInput) return;
+
+    nameInput.value = this.generateRandomName();
   }
 
   private updateSpeedGraph(): void {

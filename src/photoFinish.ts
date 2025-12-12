@@ -1,4 +1,10 @@
 import * as THREE from 'three';
+import {
+  photoFinishThumbnailStyles,
+  photoFinishThumbnailHTML,
+  photoFinishModalStyles,
+  photoFinishModalHTML,
+} from './overlayTemplates';
 
 export class PhotoFinish {
   private capturedImageDataURL: string | null = null;
@@ -52,57 +58,8 @@ export class PhotoFinish {
   private createThumbnail(): void {
     this.thumbnailElement = document.createElement('div');
     this.thumbnailElement.id = 'photo-finish-thumbnail';
-    this.thumbnailElement.style.cssText = `
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 200px;
-      height: 120px;
-      background: linear-gradient(145deg, #2c2c2c, #1a1a1a);
-      border: 3px solid #fff;
-      cursor: pointer;
-      display: none;
-      overflow: hidden;
-      z-index: 1000;
-      transition: transform 0.2s ease;
-    `;
-
-    this.thumbnailElement.innerHTML = `
-      <div style="
-        position: absolute;
-        top: 8px;
-        left: 8px;
-        right: 8px;
-        bottom: 8px;
-        background: #000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-      ">
-        <img id="photo-finish-img" style="
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        " />
-      </div>
-      <div style="
-        position: absolute;
-        bottom: 12px;
-        left: 0;
-        right: 0;
-        text-align: center;
-        color: #fff;
-        font-family: 'Georgia', serif;
-        font-size: 10px;
-        font-style: italic;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
-        background: linear-gradient(transparent, rgba(0,0,0,0.5));
-        padding: 8px 4px 4px;
-      ">
-        PHOTO FINISH
-      </div>
-    `;
+    this.thumbnailElement.style.cssText = photoFinishThumbnailStyles;
+    this.thumbnailElement.innerHTML = photoFinishThumbnailHTML;
 
     this.thumbnailElement.addEventListener('mouseenter', () => {
       if (this.thumbnailElement) {
@@ -132,57 +89,8 @@ export class PhotoFinish {
   private createModal(): void {
     this.modalElement = document.createElement('div');
     this.modalElement.id = 'photo-finish-modal';
-    this.modalElement.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.9);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-      cursor: pointer;
-    `;
-
-    this.modalElement.innerHTML = `
-      <div style="
-        position: relative;
-        max-width: 90%;
-        max-height: 90%;
-        background: linear-gradient(145deg, #2c2c2c, #1a1a1a);
-        padding: 20px;
-        border: 4px solid #fff;
-      ">
-        <img id="photo-finish-modal-img" style="
-          display: block;
-          max-width: calc(90vw - 80px);
-          max-height: calc(90vh - 120px);
-          object-fit: contain;
-        " />
-        <div style="
-          text-align: center;
-          color: #fff;
-          font-family: 'Georgia', serif;
-          font-size: 16px;
-          font-style: italic;
-          margin-top: 12px;
-          text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-        ">
-          PHOTO FINISH
-        </div>
-        <div style="
-          text-align: center;
-          color: #aaa;
-          font-family: 'Arial', sans-serif;
-          font-size: 11px;
-          margin-top: 8px;
-        ">
-          Right-click to save • ESC or click outside to close
-        </div>
-      </div>
-    `;
+    this.modalElement.style.cssText = photoFinishModalStyles;
+    this.modalElement.innerHTML = photoFinishModalHTML;
 
     this.modalElement.addEventListener('click', (e) => {
       if (e.target === this.modalElement) {
