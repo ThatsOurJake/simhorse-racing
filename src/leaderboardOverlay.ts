@@ -115,4 +115,8 @@ export class LeaderboardOverlay {
     this.raceTime = 0;
     this.update(0, []);
   }
+
+  public isShown(): boolean {
+    return this.isVisible;
+  }
 }

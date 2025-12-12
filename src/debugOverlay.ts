@@ -42,6 +42,7 @@ export class DebugOverlay {
         <div style="margin-left: 10px;">
           <div><span style="color: #ffff00;">0</span> - Orbital View (Fixed overhead)</div>
           <div><span style="color: #ffff00;">9</span> - Follow Camera (Follows leader)</div>
+          <div><span style="color: #ffff00;">-</span> - Finish Line View (Photo finish)</div>
           <div><span style="color: #ffff00;">1-8</span> - Horse View (Third-person)</div>
         </div>
         
@@ -59,6 +60,16 @@ export class DebugOverlay {
           <div><span style="color: #ffff00;">E</span> - Toggle Horse Editor</div>
           <div><span style="color: #ffff00;">L</span> - Toggle Leaderboard</div>
           <div><span style="color: #ffff00;">P</span> - Start Race</div>
+          <div><span style="color: #ffff00;">R</span> - Reset Race</div>
+        </div>
+
+        <div style="margin-top: 12px; margin-bottom: 8px; border-bottom: 1px solid #00ff00; padding-bottom: 5px;">
+          <strong style="color: #00ffff;">Screens:</strong>
+        </div>
+        <div style="margin-left: 10px;">
+          <div><span style="color: #ffff00;">Q</span> - Show Riders Roster (with odds)</div>
+          <div><span style="color: #ffff00;">W</span> - Show Podium (top 3)</div>
+          <div><span style="color: #ffff00;">A</span> - Return to Main View</div>
         </div>
       </div>
     `;

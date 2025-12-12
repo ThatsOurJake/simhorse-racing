@@ -20,6 +20,7 @@ export interface Horse {
   speedCurve: SpeedPoint[]; // Pre-calculated speed curve
   hasFinished: boolean;
   finishTime: number | null; // Time when horse finished (null if not finished)
+  finishSpeed: number; // Speed when crossing finish line (for smooth deceleration)
   laneOffset: number; // Offset from inner edge of track
   data: HorseData; // Reference to horse data
   speedVariance: number; // Current speed variance multiplier (0.85-1.15)
@@ -35,6 +36,9 @@ export class RaceManager {
   private trackLength: number;
   private raceSeed: number = 0; // For seeded randomness
   private raceTime: number = 0; // Current race time in seconds
+  private readonly DECELERATION_DISTANCE = 30; // Distance to decelerate after finish line
+  private photoFinishCaptured: boolean = false; // Track if photo has been captured this race
+  private onPhotoFinishTrigger?: () => void; // Callback for photo capture
 
   constructor(raceTrack: RaceTrack) {
     this.raceTrack = raceTrack;
@@ -50,6 +54,10 @@ export class RaceManager {
     this.horses.forEach((horse) => {
       if (horse.mesh.parent) {
         horse.mesh.parent.remove(horse.mesh);
+        // Also remove name label if it exists
+        if (horse.mesh.userData.nameLabel && horse.mesh.userData.nameLabel.parent) {
+          horse.mesh.userData.nameLabel.parent.remove(horse.mesh.userData.nameLabel);
+        }
       }
     });
 
@@ -72,6 +80,10 @@ export class RaceManager {
       const material = new THREE.MeshLambertMaterial({ color: horseData.color });
       const mesh = new THREE.Mesh(geometry, material);
 
+      // Create name label using canvas texture
+      const nameLabel = this.createNameLabel(horseData.name);
+      mesh.userData.nameLabel = nameLabel;
+
       // Generate final kick using race seed
       const finalKick = this.seededRandom(this.raceSeed + index * 7) * 0.4 + 0.8; // 0.8-1.2
 
@@ -82,6 +94,7 @@ export class RaceManager {
         speedCurve,
         hasFinished: false,
         finishTime: null,
+        finishSpeed: 0,
         laneOffset,
         data: horseData,
         speedVariance: 1.0,
@@ -93,6 +106,7 @@ export class RaceManager {
       const trackGroup = this.raceTrack.getGroup();
       if (trackGroup.parent) {
         trackGroup.parent.add(mesh);
+        trackGroup.parent.add(nameLabel);
       }
     });
 
@@ -103,6 +117,35 @@ export class RaceManager {
   private seededRandom(seed: number): number {
     const x = Math.sin(seed) * 10000;
     return x - Math.floor(x);
+  }
+
+  private createNameLabel(name: string): THREE.Sprite {
+    // Create canvas for text
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d')!;
+    canvas.width = 256;
+    canvas.height = 64;
+
+    // Set up text style
+    context.font = 'bold 32px Arial';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+
+    // Draw background
+    context.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw text
+    context.fillStyle = '#ffffff';
+    context.fillText(name, canvas.width / 2, canvas.height / 2);
+
+    // Create sprite from canvas texture
+    const texture = new THREE.CanvasTexture(canvas);
+    const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+    const sprite = new THREE.Sprite(spriteMaterial);
+    sprite.scale.set(2, 0.5, 1); // Adjust size
+
+    return sprite;
   }
 
   public async startRace(): Promise<void> {
@@ -127,6 +170,7 @@ export class RaceManager {
       horse.progress = 0;
       horse.hasFinished = false;
       horse.finishTime = null;
+      horse.finishSpeed = 0;
       horse.currentSpeed = horse.speedCurve[0].speed;
       horse.speedVariance = 1.0;
       horse.varianceTimer = 0;
@@ -136,18 +180,41 @@ export class RaceManager {
       horse.mesh.position.x = position.x;
       horse.mesh.position.y = position.y + 0.5;
       horse.mesh.position.z = position.z;
+
+      // Update name label position (above horse)
+      if (horse.mesh.userData.nameLabel) {
+        const nameLabel = horse.mesh.userData.nameLabel as THREE.Sprite;
+        nameLabel.position.x = position.x;
+        nameLabel.position.y = position.y + 1.5; // Position above horse
+        nameLabel.position.z = position.z;
+      }
     });
   }
 
   public update(deltaTime: number): void {
-    if (this.state !== RaceState.RACING) {
+    if (this.state !== RaceState.RACING && this.state !== RaceState.FINISHED) {
       return;
     }
 
-    // Update race time
-    this.raceTime += deltaTime;
+    // Update race time (only during racing, not after finished)
+    if (this.state === RaceState.RACING) {
+      this.raceTime += deltaTime;
+    }
 
     let allFinished = true;
+    let allStopped = true; // Track if all horses have completely stopped moving
+
+    // Check for photo finish trigger (when leader crosses the finish line)
+    if (!this.photoFinishCaptured && this.state === RaceState.RACING) {
+      const leadProgress = this.getLeadHorseProgress();
+
+      if (leadProgress >= this.trackLength) {
+        this.photoFinishCaptured = true;
+        if (this.onPhotoFinishTrigger) {
+          this.onPhotoFinishTrigger();
+        }
+      }
+    }
 
     // Update each horse
     this.horses.forEach((horse, horseIndex) => {
@@ -180,31 +247,61 @@ export class RaceManager {
         }
 
         horse.currentSpeed = finalSpeed;
+      }
 
-        // Move horse forward
-        horse.progress += horse.currentSpeed * deltaTime;
+      // Check if horse has already finished and is decelerating
+      if (horse.hasFinished) {
+        const distancePastFinish = horse.progress - this.trackLength;
+        if (distancePastFinish < this.DECELERATION_DISTANCE) {
+          // Use ease-out curve for smooth deceleration (quadratic ease-out for gentler slowdown)
+          const t = distancePastFinish / this.DECELERATION_DISTANCE;
+          const easeOut = 1 - Math.pow(1 - t, 2); // Quadratic ease-out (gentler than cubic)
 
-        // Check if finished lap
-        if (horse.progress >= this.trackLength) {
-          horse.progress = this.trackLength;
-          if (!horse.hasFinished) {
-            horse.hasFinished = true;
-            horse.finishTime = this.raceTime;
-          }
+          // Interpolate from finish speed to 0
+          horse.currentSpeed = horse.finishSpeed * (1 - easeOut);
         } else {
-          allFinished = false;
+          // Stop completely after deceleration distance
+          horse.currentSpeed = 0;
         }
+      }
 
-        // Update horse position based on progress and lane
-        const position = this.raceTrack.getTrackPosition(horse.progress, horse.laneOffset);
-        horse.mesh.position.x = position.x;
-        horse.mesh.position.y = position.y + 0.5; // Keep horse above ground
-        horse.mesh.position.z = position.z;
+      // Move horse forward once per frame
+      horse.progress += horse.currentSpeed * deltaTime;
+
+      // Check if just crossed finish line this frame
+      if (horse.progress >= this.trackLength && !horse.hasFinished) {
+        horse.hasFinished = true;
+        horse.finishTime = this.raceTime;
+        horse.finishSpeed = horse.currentSpeed; // Store speed at finish for smooth deceleration
+      }
+
+      // Track if all horses have finished
+      if (!horse.hasFinished) {
+        allFinished = false;
+      }
+
+      // Track if all horses have completely stopped moving
+      if (horse.currentSpeed > 0.01) {
+        allStopped = false;
+      }
+
+      // Update horse position based on progress and lane
+      const position = this.raceTrack.getTrackPosition(horse.progress, horse.laneOffset);
+      horse.mesh.position.x = position.x;
+      horse.mesh.position.y = position.y + 0.5; // Keep horse above ground
+      horse.mesh.position.z = position.z;
+
+      // Update name label position (above horse)
+      if (horse.mesh.userData.nameLabel) {
+        const nameLabel = horse.mesh.userData.nameLabel as THREE.Sprite;
+        nameLabel.position.x = position.x;
+        nameLabel.position.y = position.y + 1.5; // Position above horse
+        nameLabel.position.z = position.z;
       }
     });
 
-    // Check if race is finished
-    if (allFinished) {
+    // Check if race should transition to finished (all crossed line)
+    if (allFinished && this.state === RaceState.RACING) {
       this.state = RaceState.FINISHED;
       console.log('Race finished!');
       this.printRaceResults();
@@ -250,7 +347,14 @@ export class RaceManager {
 
   public resetRace(): void {
     this.state = RaceState.IDLE;
+    this.raceTime = 0;
+    this.photoFinishCaptured = false; // Reset photo capture flag
     this.resetHorses();
+  }
+
+  public stopRace(): void {
+    // Stop the race immediately and set to finished state
+    this.state = RaceState.FINISHED;
   }
 
   public getHorses(): Horse[] {
@@ -309,5 +413,9 @@ export class RaceManager {
 
   public getTrackLength(): number {
     return this.trackLength;
+  }
+
+  public setPhotoFinishCallback(callback: () => void): void {
+    this.onPhotoFinishTrigger = callback;
   }
 }

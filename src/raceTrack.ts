@@ -26,6 +26,7 @@ export class RaceTrack {
     this.createTrack();
     this.createBarriers();
     this.createFinishLine();
+    this.createFinalStretchSign();
   }
 
   private createFinishLine(): void {
@@ -65,6 +66,71 @@ export class RaceTrack {
         this.group.add(square);
       }
     }
+  }
+
+  private createFinalStretchSign(): void {
+    // Calculate 85% position on track (start of final stretch)
+    const totalLength = this.config.length * 2 + Math.PI * this.config.radius * 2;
+    const finalStretchDistance = totalLength * 0.85;
+
+    // Get position for the sign (on outer edge of track)
+    const signPosition = this.getTrackPosition(finalStretchDistance, this.config.width + 1);
+
+    // Create sign post
+    const postGeometry = new THREE.CylinderGeometry(0.1, 0.1, 3, 8);
+    const postMaterial = new THREE.MeshStandardMaterial({
+      color: 0x333333,
+      metalness: 0.3,
+      roughness: 0.7
+    });
+    const post = new THREE.Mesh(postGeometry, postMaterial);
+    post.position.set(signPosition.x, 1.5, signPosition.z);
+    post.castShadow = true;
+    this.group.add(post);
+
+    // Create sign board
+    const boardGeometry = new THREE.BoxGeometry(4, 1, 0.2);
+    const boardMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffff00,
+      metalness: 0.2,
+      roughness: 0.6
+    });
+    const board = new THREE.Mesh(boardGeometry, boardMaterial);
+    board.position.set(signPosition.x, 3.5, signPosition.z);
+    board.castShadow = true;
+    this.group.add(board);
+
+    // Create text using canvas texture
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 128;
+    const context = canvas.getContext('2d')!;
+
+    // Background
+    context.fillStyle = '#ffff00';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Text
+    context.fillStyle = '#000000';
+    context.font = 'bold 48px Arial';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText('FINAL STRETCH', canvas.width / 2, canvas.height / 2);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    const textMaterial = new THREE.MeshBasicMaterial({ map: texture });
+    const textGeometry = new THREE.PlaneGeometry(3.8, 0.9);
+
+    // Front side text
+    const textMeshFront = new THREE.Mesh(textGeometry, textMaterial);
+    textMeshFront.position.set(signPosition.x, 3.5, signPosition.z + 0.11);
+    this.group.add(textMeshFront);
+
+    // Back side text
+    const textMeshBack = new THREE.Mesh(textGeometry, textMaterial);
+    textMeshBack.position.set(signPosition.x, 3.5, signPosition.z - 0.11);
+    textMeshBack.rotation.y = Math.PI;
+    this.group.add(textMeshBack);
   }
 
   private createTrack(): void {
@@ -357,6 +423,16 @@ export class RaceTrack {
    */
   public getTrackPosition(progress: number, laneOffset: number = this.config.width / 2): THREE.Vector3 {
     const totalLength = this.config.length * 2 + Math.PI * this.config.radius * 2;
+
+    // Handle progress beyond track length (for deceleration after finish)
+    if (progress > totalLength) {
+      // Continue straight past the finish line in +X direction
+      const extraDistance = progress - totalLength;
+      const zFromInner = this.config.radius + laneOffset;
+      const x = -this.config.length / 2 + extraDistance;
+      return new THREE.Vector3(x, 0, zFromInner);
+    }
+
     const normalizedProgress = (progress % totalLength) / totalLength;
 
     const straightLength = this.config.length;

@@ -491,6 +491,14 @@ export class HorseEditor {
     this.container.style.transform = 'translateX(100%)';
   }
 
+  public hide(): void {
+    this.container.style.display = 'none';
+  }
+
+  public show(): void {
+    this.container.style.display = 'block';
+  }
+
   public toggle(): void {
     if (this.isOpen) {
       this.close();
