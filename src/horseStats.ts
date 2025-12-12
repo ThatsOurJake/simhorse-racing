@@ -26,8 +26,19 @@ export function generateHorseName(index: number): string {
 }
 
 /**
+ * Generate random horse stats (rounded to 3 decimal places)
+ */
+export function generateRandomStats(): HorseStats {
+  return {
+    speed: Math.round(Math.random() * 1000) / 1000,
+    stamina: Math.round(Math.random() * 1000) / 1000,
+    acceleration: Math.round(Math.random() * 1000) / 1000,
+  };
+}
+
+/**
  * Calculate speed curve for a horse based on stats and base speed
- * Returns array of speed points across the track distance
+ * Returns array of speed points across the track distance (base curve without variance)
  */
 export function calculateSpeedCurve(
   horse: HorseData,
@@ -36,14 +47,14 @@ export function calculateSpeedCurve(
   const points: SpeedPoint[] = [];
   const { speed: speedStat, stamina: staminaStat, acceleration: accelerationStat } = horse.stats;
 
-  // Calculate actual speeds
-  const maxSpeed = horse.baseSpeed * (0.5 + speedStat * 0.5); // 50-100% of base speed
-  const minSpeed = maxSpeed * 0.3; // 30% of max speed
+  // Calculate actual speeds - wider range for more drama
+  const maxSpeed = horse.baseSpeed * (0.6 + speedStat * 0.7); // 60-130% of base speed
+  const cruisingSpeed = maxSpeed * 0.85; // Cruising at 85% of max
 
   // Calculate distances for each phase
-  const accelerationDistance = trackLength * (0.2 - accelerationStat * 0.15); // 5-20% of track
-  const maxSpeedDistance = trackLength * staminaStat * 0.5; // Up to 50% at max speed
-  const decelerationStartDistance = accelerationDistance + maxSpeedDistance;
+  const accelerationDistance = trackLength * (0.15 - accelerationStat * 0.1); // 5-15% of track
+  const midRaceEnd = trackLength * 0.85; // Mid-race ends at 85%
+  const finalStretch = trackLength * 0.15; // Last 15% is final stretch
 
   // Sample points along the track
   const numSamples = 100;
@@ -52,18 +63,18 @@ export function calculateSpeedCurve(
     let currentSpeed: number;
 
     if (distance < accelerationDistance) {
-      // Acceleration phase - ease into max speed
+      // Acceleration phase - get up to speed
       const t = distance / accelerationDistance;
       const easeT = t * t * (3 - 2 * t); // Smooth interpolation
-      currentSpeed = minSpeed + (maxSpeed - minSpeed) * easeT;
-    } else if (distance < decelerationStartDistance) {
-      // Max speed phase
-      currentSpeed = maxSpeed;
+      currentSpeed = maxSpeed * 0.4 + (cruisingSpeed - maxSpeed * 0.4) * easeT;
+    } else if (distance < midRaceEnd) {
+      // Mid-race cruising - base speed (variance will be applied during race)
+      currentSpeed = cruisingSpeed;
     } else {
-      // Deceleration phase - linear drop to min speed
-      const remainingDistance = trackLength - decelerationStartDistance;
-      const t = Math.min((distance - decelerationStartDistance) / remainingDistance, 1);
-      currentSpeed = maxSpeed - (maxSpeed - minSpeed) * t;
+      // Final stretch - horses push for the finish
+      const t = (distance - midRaceEnd) / finalStretch;
+      const pushSpeed = cruisingSpeed + (maxSpeed - cruisingSpeed) * (0.5 + staminaStat * 0.5);
+      currentSpeed = cruisingSpeed + (pushSpeed - cruisingSpeed) * t;
     }
 
     points.push({ distance, speed: currentSpeed });

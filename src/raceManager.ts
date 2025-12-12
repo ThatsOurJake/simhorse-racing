@@ -21,6 +21,9 @@ export interface Horse {
   hasFinished: boolean;
   laneOffset: number; // Offset from inner edge of track
   data: HorseData; // Reference to horse data
+  speedVariance: number; // Current speed variance multiplier (0.85-1.15)
+  varianceTimer: number; // Time until next variance change
+  finalKick: number; // Random final stretch boost (0.8-1.2)
 }
 
 export class RaceManager {
@@ -29,6 +32,7 @@ export class RaceManager {
   private countdownOverlay: CountdownOverlay;
   private raceTrack: RaceTrack;
   private trackLength: number;
+  private raceSeed: number = 0; // For seeded randomness
 
   constructor(raceTrack: RaceTrack) {
     this.raceTrack = raceTrack;
@@ -39,7 +43,7 @@ export class RaceManager {
     this.trackLength = config.length * 2 + Math.PI * config.radius * 2;
   }
 
-  public setHorses(horseDataList: HorseData[]): void {
+  public setHorses(horseDataList: HorseData[], raceSeed?: number): void {
     // Clear existing horses from scene
     this.horses.forEach((horse) => {
       if (horse.mesh.parent) {
@@ -48,6 +52,9 @@ export class RaceManager {
     });
 
     this.horses = [];
+    if (raceSeed !== undefined) {
+      this.raceSeed = raceSeed;
+    }
 
     // Create new horses
     const trackWidth = this.raceTrack.getConfig().width;
@@ -63,6 +70,9 @@ export class RaceManager {
       const material = new THREE.MeshLambertMaterial({ color: horseData.color });
       const mesh = new THREE.Mesh(geometry, material);
 
+      // Generate final kick using race seed
+      const finalKick = this.seededRandom(this.raceSeed + index * 7) * 0.4 + 0.8; // 0.8-1.2
+
       this.horses.push({
         mesh,
         progress: 0,
@@ -71,6 +81,9 @@ export class RaceManager {
         hasFinished: false,
         laneOffset,
         data: horseData,
+        speedVariance: 1.0,
+        varianceTimer: 0,
+        finalKick,
       });
 
       // Add to scene
@@ -82,6 +95,11 @@ export class RaceManager {
 
     // Position horses at starting line
     this.resetHorses();
+  }
+
+  private seededRandom(seed: number): number {
+    const x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
   }
 
   public async startRace(): Promise<void> {
@@ -105,6 +123,8 @@ export class RaceManager {
       horse.progress = 0;
       horse.hasFinished = false;
       horse.currentSpeed = horse.speedCurve[0].speed;
+      horse.speedVariance = 1.0;
+      horse.varianceTimer = 0;
 
       // Position at starting line
       const position = this.raceTrack.getTrackPosition(0, horse.laneOffset);
@@ -122,10 +142,36 @@ export class RaceManager {
     let allFinished = true;
 
     // Update each horse
-    this.horses.forEach((horse) => {
+    this.horses.forEach((horse, horseIndex) => {
       if (!horse.hasFinished) {
-        // Get current speed from speed curve based on progress
-        horse.currentSpeed = this.getSpeedAtDistance(horse.speedCurve, horse.progress);
+        // Get base speed from speed curve
+        const baseSpeed = this.getSpeedAtDistance(horse.speedCurve, horse.progress);
+
+        // Update variance timer
+        horse.varianceTimer -= deltaTime;
+        if (horse.varianceTimer <= 0) {
+          // Time to change variance - happens every 1-3 seconds
+          horse.varianceTimer = 1 + this.seededRandom(this.raceSeed + horseIndex + horse.progress) * 2;
+
+          // Calculate new variance based on stamina (high stamina = more consistent)
+          const staminaConsistency = horse.data.stats.stamina;
+          const varianceRange = 0.15 * (1 - staminaConsistency * 0.5); // 0.075-0.15 range
+          const randomFactor = this.seededRandom(this.raceSeed + horseIndex + horse.progress + 1000);
+          horse.speedVariance = 1.0 + (randomFactor - 0.5) * 2 * varianceRange;
+        }
+
+        // Apply variance
+        let finalSpeed = baseSpeed * horse.speedVariance;
+
+        // Check if in final stretch (last 15% of track)
+        const progressRatio = horse.progress / this.trackLength;
+        if (progressRatio > 0.85) {
+          // Apply final kick modifier
+          const finalStretchBoost = 1.0 + (horse.finalKick - 1.0) * ((progressRatio - 0.85) / 0.15);
+          finalSpeed *= finalStretchBoost;
+        }
+
+        horse.currentSpeed = finalSpeed;
 
         // Move horse forward
         horse.progress += horse.currentSpeed * deltaTime;

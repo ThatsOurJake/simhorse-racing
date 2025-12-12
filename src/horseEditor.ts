@@ -3,6 +3,7 @@ import {
   generateBaseSpeed,
   calculateSpeedCurve,
   calculateRaceTime,
+  generateRandomStats,
 } from './horseStats';
 import type { HorseData, HorseStats } from './horseStats';
 import { SpeedGraph } from './speedGraph';
@@ -103,8 +104,12 @@ export class HorseEditor {
     }
 
     return this.horses
-      .map(
-        (horse) => `
+      .map((horse) => {
+        // Calculate estimated race time for this horse
+        const speedCurve = calculateSpeedCurve(horse, this.trackLength);
+        const raceTime = calculateRaceTime(speedCurve);
+
+        return `
       <div 
         style="background: #222; padding: 10px; margin-bottom: 10px; border-left: 4px solid #${horse.color.toString(16).padStart(6, '0')}; cursor: pointer;"
         data-horse-id="${horse.id}"
@@ -122,11 +127,11 @@ export class HorseEditor {
           Speed: ${horse.stats.speed.toFixed(2)} | Stamina: ${horse.stats.stamina.toFixed(2)} | Accel: ${horse.stats.acceleration.toFixed(2)}
         </div>
         <div style="font-size: 11px; color: #888;">
-          Base Speed: ${horse.baseSpeed.toFixed(2)} u/s
+          Base Speed: ${horse.baseSpeed.toFixed(2)} u/s | Est. Time: ${raceTime.toFixed(2)}s
         </div>
       </div>
-    `
-      )
+    `;
+      })
       .join('');
   }
 
@@ -179,6 +184,13 @@ export class HorseEditor {
         step="0.01"
         style="width: 100%; padding: 5px; background: #333; color: white; border: 1px solid #555; margin-bottom: 15px;"
       />
+
+      <button 
+        id="randomizeStats"
+        style="width: 100%; padding: 8px; background: #444; color: white; border: 1px solid #666; cursor: pointer; margin-bottom: 15px;"
+      >
+        🎲 Randomize Stats
+      </button>
 
       <div style="display: flex; gap: 10px;">
         <button 
@@ -260,6 +272,12 @@ export class HorseEditor {
       });
     }
 
+    // Randomize stats button
+    const randomizeStatsBtn = container.querySelector('#randomizeStats');
+    if (randomizeStatsBtn) {
+      randomizeStatsBtn.addEventListener('click', () => this.randomizeCurrentHorseStats());
+    }
+
     // Live update for stat changes
     const statInputs = ['horseSpeed', 'horseStamina', 'horseAcceleration'];
     statInputs.forEach((inputId) => {
@@ -277,11 +295,7 @@ export class HorseEditor {
     const horse: HorseData = {
       id: `horse-${Date.now()}-${Math.random()}`,
       name: generateHorseName(horseIndex),
-      stats: {
-        speed: 0.5,
-        stamina: 0.5,
-        acceleration: 0.5,
-      },
+      stats: generateRandomStats(),
       baseSpeed: generateBaseSpeed(this.raceSeed, horseIndex),
       color: this.generateHorseColor(horseIndex),
     };
@@ -343,6 +357,23 @@ export class HorseEditor {
       horse.baseSpeed = generateBaseSpeed(this.raceSeed, index);
     });
     this.notifyHorsesChanged();
+    this.updateSpeedGraph();
+  }
+
+  private randomizeCurrentHorseStats(): void {
+    if (!this.editingHorseId) return;
+
+    const speedInput = this.container.querySelector('#horseSpeed') as HTMLInputElement;
+    const staminaInput = this.container.querySelector('#horseStamina') as HTMLInputElement;
+    const accelInput = this.container.querySelector('#horseAcceleration') as HTMLInputElement;
+
+    if (!speedInput || !staminaInput || !accelInput) return;
+
+    const randomStats = generateRandomStats();
+    speedInput.value = randomStats.speed.toFixed(3);
+    staminaInput.value = randomStats.stamina.toFixed(3);
+    accelInput.value = randomStats.acceleration.toFixed(3);
+
     this.updateSpeedGraph();
   }
 

@@ -57,9 +57,9 @@ export class SpeedGraph {
       ctx.fillText(speed.toFixed(1), padding - 5, y + 3);
     }
 
-    // Draw distance label
+    // Draw distance axis label and max distance value
     ctx.textAlign = 'center';
-    ctx.fillText('Distance', width / 2, height - 10);
+    ctx.fillText('Distance', width / 2, height - 25);
     ctx.textAlign = 'right';
     ctx.fillText(maxDistance.toFixed(0), width - padding, height - padding + 15);
 
@@ -89,40 +89,74 @@ export class SpeedGraph {
     ctx.closePath();
     ctx.fill();
 
-    // Draw labels for phases
-    ctx.fillStyle = '#aaa';
-    ctx.font = '11px monospace';
-    ctx.textAlign = 'center';
+    // Find key points on the curve
+    const keyPoints: { x: number; y: number; color: string; label: string }[] = [];
 
-    // Find acceleration end point
+    // Find acceleration end (when speed stabilizes to cruising)
+    let cruisingSpeed = 0;
     let accelEndIndex = 0;
-    for (let i = 1; i < speedCurve.length; i++) {
-      if (Math.abs(speedCurve[i].speed - maxSpeed) < 0.01) {
+
+    // Look for where speed curve flattens (derivative near zero)
+    for (let i = 5; i < speedCurve.length - 5; i++) {
+      const speedChange = Math.abs(speedCurve[i + 1].speed - speedCurve[i].speed);
+      if (speedChange < 0.05) {
         accelEndIndex = i;
+        cruisingSpeed = speedCurve[i].speed;
         break;
       }
     }
 
     if (accelEndIndex > 0) {
-      const accelX = padding + (speedCurve[accelEndIndex].distance / maxDistance) * graphWidth / 2;
-      ctx.fillText('Accel', accelX, height - padding + 15);
+      const point = speedCurve[accelEndIndex];
+      const x = padding + (point.distance / maxDistance) * graphWidth;
+      const y = height - padding - ((point.speed - minSpeed) / speedRange) * graphHeight;
+      keyPoints.push({ x, y, color: '#ffe66d', label: 'Cruising Speed' });
     }
 
-    // Find deceleration start point
-    let decelStartIndex = speedCurve.length - 1;
-    for (let i = speedCurve.length - 1; i >= 0; i--) {
-      if (Math.abs(speedCurve[i].speed - maxSpeed) < 0.01) {
-        decelStartIndex = i;
-        break;
-      }
+    // Find final stretch start (85% of track where speed starts increasing again)
+    const finalStretchDistance = maxDistance * 0.85;
+    let finalStretchIndex = Math.floor(speedCurve.length * 0.85);
+
+    if (finalStretchIndex < speedCurve.length) {
+      const point = speedCurve[finalStretchIndex];
+      const x = padding + (point.distance / maxDistance) * graphWidth;
+      const y = height - padding - ((point.speed - minSpeed) / speedRange) * graphHeight;
+      keyPoints.push({ x, y, color: '#4ecdc4', label: 'Final Stretch' });
     }
 
-    if (decelStartIndex < speedCurve.length - 1 && accelEndIndex < decelStartIndex) {
-      const maxSpeedX = padding + ((speedCurve[accelEndIndex].distance + speedCurve[decelStartIndex].distance) / 2 / maxDistance) * graphWidth;
-      ctx.fillText('Max Speed', maxSpeedX, height - padding + 15);
+    // Draw key points as colored circles
+    keyPoints.forEach((point) => {
+      ctx.fillStyle = point.color;
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    });
 
-      const decelX = padding + ((speedCurve[decelStartIndex].distance + maxDistance) / 2 / maxDistance) * graphWidth;
-      ctx.fillText('Decel', decelX, height - padding + 15);
-    }
+    // Draw legend below the graph
+    ctx.font = '11px monospace';
+    ctx.textAlign = 'left';
+    const legendStartX = padding;
+    const legendY = height - 10;
+    const legendSpacing = 100; // Horizontal spacing between legend items
+
+    keyPoints.forEach((point, index) => {
+      const legendX = legendStartX + index * legendSpacing;
+
+      // Draw colored circle
+      ctx.fillStyle = point.color;
+      ctx.beginPath();
+      ctx.arc(legendX, legendY, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Draw label
+      ctx.fillStyle = '#ddd';
+      ctx.fillText(point.label, legendX + 10, legendY + 4);
+    });
   }
 }

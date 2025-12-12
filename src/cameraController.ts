@@ -90,14 +90,17 @@ export class CameraController {
       // Smooth camera movement
       this.camera.position.lerp(cameraPosition, 0.08);
 
-      // Calculate average position of all horses for better framing
-      const avgHorsePos = new THREE.Vector3();
-      horsePositions.forEach((pos) => avgHorsePos.add(pos));
-      avgHorsePos.divideScalar(horsePositions.length);
-      avgHorsePos.setY(1);
+      // Get the lead horse position (find the horse closest to leadHorseProgress)
+      let leadHorsePos = horsePositions[0];
+      if (horsePositions.length > 0) {
+        // The horses aren't necessarily in order, so we need to find which one is actually leading
+        // Since we only have positions, just look at the first horse (we could improve this)
+        const leadPos = getTrackPosition(leadHorseProgress);
+        leadHorsePos = new THREE.Vector3(leadPos.x, 1, leadPos.z);
+      }
 
-      // Look at the pack
-      this.camera.lookAt(avgHorsePos);
+      // Look at the lead horse
+      this.camera.lookAt(leadHorsePos);
     } else {
       // Fallback to simple behavior
       const leadHorse = horsePositions[0];

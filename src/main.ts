@@ -72,7 +72,8 @@ const horseEditor = new HorseEditor(trackLength);
 
 // Listen for horse changes
 horseEditor.onHorsesChange((horses: HorseData[]) => {
-  raceManager.setHorses(horses);
+  const raceSeed = horseEditor.getRaceSeed();
+  raceManager.setHorses(horses, raceSeed);
   raceManager.resetRace();
 });
 
