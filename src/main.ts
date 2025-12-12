@@ -4,6 +4,8 @@ import { RaceTrack } from './raceTrack';
 import { CameraController, CameraMode } from './cameraController';
 import { DebugOverlay } from './debugOverlay';
 import { RaceManager } from './raceManager';
+import { HorseEditor } from './horseEditor';
+import type { HorseData } from './horseStats';
 
 // Scene setup
 const scene = new THREE.Scene();
@@ -64,29 +66,14 @@ const cameraController = new CameraController(camera);
 // Initialize debug overlay
 const debugOverlay = new DebugOverlay();
 
-// Add starting position markers for visualization (temporary horses)
-const numHorses = 8;
-const startingPositions = raceTrack.getStartingPositions(numHorses);
-const horseMarkers: THREE.Mesh[] = [];
-const trackConfig = raceTrack.getConfig();
-const laneSpacing = trackConfig.width / (numHorses + 1);
+// Initialize horse editor
+const trackLength = raceManager.getTrackLength();
+const horseEditor = new HorseEditor(trackLength);
 
-startingPositions.forEach((pos, index) => {
-  const markerGeometry = new THREE.BoxGeometry(0.8, 0.8, 0.8);
-  const markerMaterial = new THREE.MeshStandardMaterial({
-    color: 0xff0000
-  });
-  const marker = new THREE.Mesh(markerGeometry, markerMaterial);
-  marker.position.copy(pos);
-  marker.castShadow = true;
-  scene.add(marker);
-  horseMarkers.push(marker);
-
-  // Calculate lane offset from inner edge for this horse
-  const laneOffset = laneSpacing * (index + 1);
-
-  // Register horse with race manager
-  raceManager.addHorse(marker, laneOffset);
+// Listen for horse changes
+horseEditor.onHorsesChange((horses: HorseData[]) => {
+  raceManager.setHorses(horses);
+  raceManager.resetRace();
 });
 
 // Keyboard controls
@@ -99,16 +86,31 @@ window.addEventListener('keydown', (event) => {
     return;
   }
 
-  // Start race with 'P'
+  // Start race with 'P' (only if not racing and horses exist)
   if (key === 'p') {
-    if (!raceManager.isRacing()) {
+    if (!raceManager.isRacing() && raceManager.getHorses().length > 0) {
+      horseEditor.close(); // Close editor during race
       raceManager.startRace();
       console.log('Race starting...');
     }
     return;
   }
 
-  // Camera mode switching
+  // Toggle horse editor with 'E'
+  if (key === 'e') {
+    if (!raceManager.isRacing()) {
+      horseEditor.toggle();
+    }
+    return;
+  }
+
+  // Camera mode switching (disabled when editor is open)
+  if (horseEditor.isEditorOpen()) {
+    return; // Don't process camera hotkeys when editor is open
+  }
+
+  const horses = raceManager.getHorses();
+
   if (key === '0') {
     cameraController.setMode(CameraMode.ORBITAL);
     console.log('Camera: Orbital View');
@@ -117,7 +119,7 @@ window.addEventListener('keydown', (event) => {
     console.log('Camera: Follow View');
   } else if (key >= '1' && key <= '8') {
     const horseIndex = parseInt(key) - 1;
-    if (horseIndex < horseMarkers.length) {
+    if (horseIndex < horses.length) {
       cameraController.setMode(CameraMode.HORSE, horseIndex);
       console.log(`Camera: Horse ${key} View`);
     }
@@ -145,8 +147,9 @@ function animate() {
   // Update race (moves horses)
   raceManager.update(deltaTime);
 
-  // Get current horse positions
-  const horsePositions = horseMarkers.map((marker) => marker.position);
+  // Get current horses and their data
+  const horses = raceManager.getHorses();
+  const horsePositions = horses.map((horse) => horse.mesh.position);
   const trackCenter = new THREE.Vector3(0, 0, 0);
 
   // Create track position function for camera
@@ -160,7 +163,13 @@ function animate() {
   const horseProgressList = raceManager.getHorseProgressList();
 
   // Update camera based on current mode
-  cameraController.update(horsePositions, trackCenter, getTrackPosition, leadHorseProgress, horseProgressList);
+  cameraController.update(
+    horsePositions,
+    trackCenter,
+    getTrackPosition,
+    leadHorseProgress,
+    horseProgressList
+  );
 
   renderer.render(scene, camera);
 }

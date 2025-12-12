@@ -25,6 +25,46 @@ export class RaceTrack {
     this.group = new THREE.Group();
     this.createTrack();
     this.createBarriers();
+    this.createFinishLine();
+  }
+
+  private createFinishLine(): void {
+    // Create checkered finish line at the starting position with 3 rows
+    const numSquares = 8;
+    const squareWidth = this.config.width / numSquares;
+    const lineThickness = 0.5;
+    const numRows = 3;
+
+    for (let row = 0; row < numRows; row++) {
+      // Offset for each row: -1, 0, 1 (behind, center, front)
+      const rowOffset = (row - 1) * lineThickness;
+
+      for (let i = 0; i < numSquares; i++) {
+        // Alternate black and white squares, offset pattern by row for classic checkered look
+        const color = (i + row) % 2 === 0 ? 0x000000 : 0xffffff;
+        const material = new THREE.MeshStandardMaterial({
+          color: color,
+          roughness: 0.8,
+          metalness: 0.2
+        });
+
+        const squareGeometry = new THREE.BoxGeometry(
+          lineThickness,
+          0.11, // Slightly taller than track to be visible
+          squareWidth
+        );
+
+        const square = new THREE.Mesh(squareGeometry, material);
+        // Position at the start of the track
+        square.position.x = -this.config.length / 2 + rowOffset;
+        square.position.y = 0.05;
+        square.position.z = this.config.radius + squareWidth * i + squareWidth / 2;
+        square.receiveShadow = true;
+        square.castShadow = true;
+
+        this.group.add(square);
+      }
+    }
   }
 
   private createTrack(): void {
@@ -292,14 +332,17 @@ export class RaceTrack {
 
   public getStartingPositions(numPositions: number): THREE.Vector3[] {
     const positions: THREE.Vector3[] = [];
-    const startZ = this.config.radius + this.config.width / 2; // Start at bottom straight
-    const startX = -this.config.length / 2 + 5; // 5 units from the left end
-    const spacing = this.config.width / (numPositions + 1);
+    const laneSpacing = this.config.width / (numPositions + 1);
 
     for (let i = 0; i < numPositions; i++) {
-      const x = startX;
-      const z = startZ - this.config.width / 2 + spacing * (i + 1);
-      positions.push(new THREE.Vector3(x, 0.5, z));
+      // Calculate lane offset for this horse
+      const laneOffset = laneSpacing * (i + 1);
+
+      // Use getTrackPosition at progress 0 to align with race start
+      const trackPos = this.getTrackPosition(0, laneOffset);
+      trackPos.y = 0.5; // Horse height above ground
+
+      positions.push(trackPos);
     }
 
     return positions;

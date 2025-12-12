@@ -23,7 +23,6 @@ export class CameraController {
   private readonly ORBITAL_LOOKAT = new THREE.Vector3(0, 0, 0);
 
   // Camera offset configurations
-  private readonly HORSE_VIEW_OFFSET = new THREE.Vector3(0, 2, -4);
   private readonly FOLLOW_CAM_HEIGHT = 5;
   private readonly FOLLOW_CAM_BEHIND_DISTANCE = 10; // Distance behind leader (easily adjustable)
 
@@ -37,7 +36,7 @@ export class CameraController {
 
   public update(
     horsePositions: THREE.Vector3[],
-    trackCenter: THREE.Vector3,
+    _trackCenter: THREE.Vector3,
     getTrackPosition?: (progress: number, laneOffset?: number) => THREE.Vector3,
     leadHorseProgress?: number,
     horseProgressList?: number[]
@@ -47,7 +46,7 @@ export class CameraController {
         this.updateOrbitalCamera();
         break;
       case CameraMode.FOLLOW:
-        this.updateFollowCamera(horsePositions, trackCenter, getTrackPosition, leadHorseProgress);
+        this.updateFollowCamera(horsePositions, getTrackPosition, leadHorseProgress);
         break;
       case CameraMode.HORSE:
         this.updateHorseCamera(horsePositions, getTrackPosition, horseProgressList);
@@ -68,7 +67,6 @@ export class CameraController {
 
   private updateFollowCamera(
     horsePositions: THREE.Vector3[],
-    trackCenter: THREE.Vector3,
     getTrackPosition?: (progress: number, laneOffset?: number) => THREE.Vector3,
     leadHorseProgress?: number
   ): void {
