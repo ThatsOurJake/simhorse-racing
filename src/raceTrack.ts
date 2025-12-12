@@ -303,4 +303,50 @@ export class RaceTrack {
 
     return positions;
   }
+
+  /**
+   * Get a position on the track based on progress distance traveled.
+   * Progress 0 starts at the starting line, increases as you go around the track.
+   * Returns a position in the center of the racing surface.
+   */
+  public getTrackPosition(progress: number): THREE.Vector3 {
+    const totalLength = this.config.length * 2 + Math.PI * this.config.radius * 2;
+    const normalizedProgress = (progress % totalLength) / totalLength;
+
+    const straightLength = this.config.length;
+    const curveLength = Math.PI * this.config.radius;
+
+    const section1 = straightLength / totalLength; // Bottom straight
+    const section2 = (straightLength + curveLength) / totalLength; // Right curve
+    const section3 = (straightLength * 2 + curveLength) / totalLength; // Top straight
+    // Remaining is left curve
+
+    const centerZ = this.config.radius + this.config.width / 2;
+
+    if (normalizedProgress < section1) {
+      // Bottom straight - moving left (-X direction)
+      const t = normalizedProgress / section1;
+      const x = -this.config.length / 2 + straightLength * t;
+      return new THREE.Vector3(x, 0, centerZ);
+    } else if (normalizedProgress < section2) {
+      // Right curve
+      const t = (normalizedProgress - section1) / (section2 - section1);
+      const angle = -Math.PI / 2 + Math.PI * t;
+      const x = Math.cos(angle) * this.config.radius + this.config.length / 2;
+      const z = Math.sin(angle) * this.config.radius;
+      return new THREE.Vector3(x, 0, z);
+    } else if (normalizedProgress < section3) {
+      // Top straight - moving right (+X direction)
+      const t = (normalizedProgress - section2) / (section3 - section2);
+      const x = this.config.length / 2 - straightLength * t;
+      return new THREE.Vector3(x, 0, -centerZ);
+    } else {
+      // Left curve
+      const t = (normalizedProgress - section3) / (1 - section3);
+      const angle = Math.PI / 2 + Math.PI * t;
+      const x = Math.cos(angle) * this.config.radius - this.config.length / 2;
+      const z = Math.sin(angle) * this.config.radius;
+      return new THREE.Vector3(x, 0, z);
+    }
+  }
 }
