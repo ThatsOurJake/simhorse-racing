@@ -38,17 +38,19 @@ export class CameraController {
   public update(
     horsePositions: THREE.Vector3[],
     trackCenter: THREE.Vector3,
-    getTrackPosition?: (progress: number) => THREE.Vector3
+    getTrackPosition?: (progress: number, laneOffset?: number) => THREE.Vector3,
+    leadHorseProgress?: number,
+    horseProgressList?: number[]
   ): void {
     switch (this.currentMode) {
       case CameraMode.ORBITAL:
         this.updateOrbitalCamera();
         break;
       case CameraMode.FOLLOW:
-        this.updateFollowCamera(horsePositions, trackCenter, getTrackPosition);
+        this.updateFollowCamera(horsePositions, trackCenter, getTrackPosition, leadHorseProgress);
         break;
       case CameraMode.HORSE:
-        this.updateHorseCamera(horsePositions);
+        this.updateHorseCamera(horsePositions, getTrackPosition, horseProgressList);
         break;
     }
   }
@@ -67,30 +69,17 @@ export class CameraController {
   private updateFollowCamera(
     horsePositions: THREE.Vector3[],
     trackCenter: THREE.Vector3,
-    getTrackPosition?: (progress: number) => THREE.Vector3
+    getTrackPosition?: (progress: number, laneOffset?: number) => THREE.Vector3,
+    leadHorseProgress?: number
   ): void {
     if (horsePositions.length === 0) return;
 
-    // Find the leading horse (furthest along the track)
-    let leadHorse = horsePositions[0];
-    let minX = horsePositions[0].x;
+    // If we have track position function and lead horse progress, use proper track following
+    if (getTrackPosition && leadHorseProgress !== undefined) {
+      // Position camera AHEAD of the leader by the configured distance (to face them)
+      const cameraProgress = leadHorseProgress + this.FOLLOW_CAM_BEHIND_DISTANCE;
 
-    for (const pos of horsePositions) {
-      if (pos.x < minX) {
-        minX = pos.x;
-        leadHorse = pos;
-      }
-    }
-
-    // If we have a track position function, use it to follow the track path
-    if (getTrackPosition) {
-      // Calculate progress based on leader's X position (starts at -length/2)
-      // This is a simplified progress - we'll enhance this later with proper track following
-      const startX = -20; // Approximate start position
-      const progress = Math.abs(leadHorse.x - startX);
-
-      // Position camera behind the leader by the configured distance
-      const cameraProgress = Math.max(0, progress - this.FOLLOW_CAM_BEHIND_DISTANCE);
+      // Get camera position on track (center lane)
       const cameraTrackPos = getTrackPosition(cameraProgress);
 
       // Set camera position on track with height
@@ -105,14 +94,15 @@ export class CameraController {
 
       // Calculate average position of all horses for better framing
       const avgHorsePos = new THREE.Vector3();
-      horsePositions.forEach(pos => avgHorsePos.add(pos));
+      horsePositions.forEach((pos) => avgHorsePos.add(pos));
       avgHorsePos.divideScalar(horsePositions.length);
       avgHorsePos.setY(1);
 
       // Look at the pack
       this.camera.lookAt(avgHorsePos);
     } else {
-      // Fallback to simple behavior if no track function provided
+      // Fallback to simple behavior
+      const leadHorse = horsePositions[0];
       const cameraPosition = new THREE.Vector3()
         .copy(leadHorse)
         .add(new THREE.Vector3(this.FOLLOW_CAM_BEHIND_DISTANCE, this.FOLLOW_CAM_HEIGHT, 0));
@@ -122,32 +112,57 @@ export class CameraController {
     }
   }
 
-  private updateHorseCamera(horsePositions: THREE.Vector3[]): void {
+  private updateHorseCamera(
+    horsePositions: THREE.Vector3[],
+    getTrackPosition?: (progress: number, laneOffset?: number) => THREE.Vector3,
+    horseProgressList?: number[]
+  ): void {
     if (this.selectedHorseIndex >= horsePositions.length) return;
 
     const horsePos = horsePositions[this.selectedHorseIndex];
 
-    // Horses move in +X direction (along the track from starting position)
-    // So camera should be behind them in -X direction
-    const cameraOffset = new THREE.Vector3(
-      -4, // Behind the horse (opposite of +X movement)
-      2,  // Height above horse
-      0   // No side offset
-    );
+    // If we have track position function and horse progress, follow the track
+    if (getTrackPosition && horseProgressList && horseProgressList[this.selectedHorseIndex] !== undefined) {
+      const horseProgress = horseProgressList[this.selectedHorseIndex];
 
-    const cameraPosition = new THREE.Vector3()
-      .copy(horsePos)
-      .add(cameraOffset);
+      // Position camera BEHIND the horse by 4 units
+      const cameraProgress = Math.max(0, horseProgress - 4);
 
-    // Smooth camera following
-    this.camera.position.lerp(cameraPosition, 0.1);
+      // Get camera position on track (center lane)
+      const cameraTrackPos = getTrackPosition(cameraProgress);
 
-    // Look at the horse at head height
-    const lookAtPoint = new THREE.Vector3()
-      .copy(horsePos)
-      .setY(horsePos.y + 1);
+      // Set camera position on track with height
+      const cameraPosition = new THREE.Vector3(
+        cameraTrackPos.x,
+        2, // Height above ground
+        cameraTrackPos.z
+      );
 
-    this.camera.lookAt(lookAtPoint);
+      // Smooth camera following
+      this.camera.position.lerp(cameraPosition, 0.1);
+
+      // Look at the horse at head height
+      const lookAtPoint = new THREE.Vector3().copy(horsePos).setY(horsePos.y + 1);
+
+      this.camera.lookAt(lookAtPoint);
+    } else {
+      // Fallback to simple offset
+      const cameraOffset = new THREE.Vector3(
+        -4, // Behind the horse
+        2, // Height above horse
+        0 // No side offset
+      );
+
+      const cameraPosition = new THREE.Vector3().copy(horsePos).add(cameraOffset);
+
+      // Smooth camera following
+      this.camera.position.lerp(cameraPosition, 0.1);
+
+      // Look at the horse at head height
+      const lookAtPoint = new THREE.Vector3().copy(horsePos).setY(horsePos.y + 1);
+
+      this.camera.lookAt(lookAtPoint);
+    }
   }
 
   public setMode(mode: CameraMode, horseIndex?: number): void {

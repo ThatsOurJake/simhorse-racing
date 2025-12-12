@@ -150,10 +150,17 @@ function animate() {
   const trackCenter = new THREE.Vector3(0, 0, 0);
 
   // Create track position function for camera
-  const getTrackPosition = (progress: number) => raceTrack.getTrackPosition(progress);
+  const getTrackPosition = (progress: number, laneOffset?: number) =>
+    raceTrack.getTrackPosition(progress, laneOffset);
+
+  // Get lead horse progress for follow camera
+  const leadHorseProgress = raceManager.getLeadHorseProgress();
+
+  // Get all horse progress for individual horse cameras
+  const horseProgressList = raceManager.getHorseProgressList();
 
   // Update camera based on current mode
-  cameraController.update(horsePositions, trackCenter, getTrackPosition);
+  cameraController.update(horsePositions, trackCenter, getTrackPosition, leadHorseProgress, horseProgressList);
 
   renderer.render(scene, camera);
 }

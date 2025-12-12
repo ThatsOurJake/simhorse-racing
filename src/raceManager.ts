@@ -130,6 +130,24 @@ export class RaceManager {
     return this.horses;
   }
 
+  public getLeadHorseProgress(): number {
+    if (this.horses.length === 0) return 0;
+
+    // Find the horse with the most progress
+    let maxProgress = 0;
+    this.horses.forEach((horse) => {
+      if (horse.progress > maxProgress) {
+        maxProgress = horse.progress;
+      }
+    });
+
+    return maxProgress;
+  }
+
+  public getHorseProgressList(): number[] {
+    return this.horses.map((horse) => horse.progress);
+  }
+
   public dispose(): void {
     this.countdownOverlay.dispose();
   }
