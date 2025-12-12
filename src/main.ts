@@ -73,14 +73,18 @@ ground.receiveShadow = true;
 scene.add(ground);
 
 // Create the race track
-const raceTrack = new RaceTrack();
+const raceTrack = new RaceTrack({
+  length: 60,  // 50% longer straights
+  width: 15,   // 25% wider
+  radius: 20   // Larger curves
+});
 scene.add(raceTrack.getGroup());
 
 // Initialize race manager
 const raceManager = new RaceManager(raceTrack);
 
-// Initialize camera controller
-const cameraController = new CameraController(camera);
+// Initialize camera controller with track config for automatic scaling
+const cameraController = new CameraController(camera, raceTrack.getConfig());
 
 // Initialize debug overlay
 const debugOverlay = new DebugOverlay();

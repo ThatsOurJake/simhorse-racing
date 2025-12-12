@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import type { RaceTrackConfig } from './raceTrack';
 
 export const CameraMode = {
   ORBITAL: 'orbital',
@@ -20,16 +21,35 @@ export class CameraController {
   private selectedHorseIndex: number = 0;
   private lockedHorseName: string | null = null; // Track specific horse by name when racing
 
-  // Fixed orbital camera position
-  private readonly ORBITAL_POSITION = new THREE.Vector3(0, 35, 45);
-  private readonly ORBITAL_LOOKAT = new THREE.Vector3(0, 0, 0);
+  // Dynamic camera positions based on track config
+  private readonly ORBITAL_POSITION: THREE.Vector3;
+  private readonly ORBITAL_LOOKAT: THREE.Vector3;
+  private readonly finishLineSideOffset: number;
+  private readonly finishLineCameraHeight: number;
+  private readonly trackWidth: number;
 
   // Camera offset configurations
   private readonly FOLLOW_CAM_HEIGHT = 5;
   private readonly FOLLOW_CAM_BEHIND_DISTANCE = 10; // Distance behind leader (easily adjustable)
 
-  constructor(camera: THREE.PerspectiveCamera) {
+  constructor(camera: THREE.PerspectiveCamera, trackConfig: RaceTrackConfig) {
     this.camera = camera;
+    this.trackWidth = trackConfig.width;
+
+    // Calculate orbital camera position based on track size
+    // Position should be high enough to see the whole track
+    const trackDiagonal = Math.sqrt(
+      Math.pow(trackConfig.length, 2) +
+      Math.pow((trackConfig.radius + trackConfig.width) * 2, 2)
+    );
+    const orbitalHeight = trackDiagonal * 0.6; // 60% of diagonal for closer view
+    const orbitalDistance = trackDiagonal * 0.65; // 65% of diagonal for zoomed in angle
+    this.ORBITAL_POSITION = new THREE.Vector3(0, orbitalHeight, orbitalDistance);
+    this.ORBITAL_LOOKAT = new THREE.Vector3(0, 0, 0);
+
+    // Calculate finish line camera settings based on track width
+    this.finishLineSideOffset = trackConfig.width * 0.9; // 0.9x track width for closer side view
+    this.finishLineCameraHeight = trackConfig.barrierHeight * 3.5; // 3.5x barrier height for elevated angle
 
     // Set initial orbital camera position
     this.camera.position.copy(this.ORBITAL_POSITION);
@@ -194,23 +214,22 @@ export class CameraController {
     if (!getTrackPosition) return;
 
     // Get the finish line position (at progress 0, which is at the start of bottom straight)
-    const finishLinePos = getTrackPosition(0, 6); // Center of track (width = 12)
+    const finishLinePos = getTrackPosition(0, this.trackWidth / 2); // Center of track
 
     // Position camera to the side (along Z axis) for proper side-on view of finish line
-    const sideOffset = 10; // Distance from track center
     const cameraPosition = new THREE.Vector3(
       finishLinePos.x, // Align camera X position with finish line
-      6, // Height to see over barriers
-      finishLinePos.z + sideOffset // Position to the side along Z
+      this.finishLineCameraHeight, // Height to see over barriers
+      finishLinePos.z + this.finishLineSideOffset // Position to the side along Z
     );
 
     // Smooth camera movement
     this.camera.position.lerp(cameraPosition, 0.1);
 
-    // Look directly at the finish line at horse height
+    // Look at finish line with slight downward tilt (below horse height)
     const lookAtPosition = new THREE.Vector3(
       finishLinePos.x,
-      1.5, // Horse height
+      0.8, // Below horse height for downward tilt
       finishLinePos.z
     );
 

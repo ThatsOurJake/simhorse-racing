@@ -31,7 +31,8 @@ export class RaceTrack {
 
   private createFinishLine(): void {
     // Create checkered finish line at the starting position with 3 rows
-    const numSquares = 8;
+    // Calculate number of squares based on track width (approximately 1.5 units per square)
+    const numSquares = Math.max(8, Math.ceil(this.config.width / 1.5));
     const squareWidth = this.config.width / numSquares;
     const lineThickness = 0.5;
     const numRows = 3;
