@@ -300,6 +300,7 @@ export function renderDebugContent(currentTheme: string = 'christmas'): string {
         <div><span style="color: #ffff00;">9:</span> Follow Camera</div>
         <div><span style="color: #ffff00;">-:</span> Finish Line Camera</div>
         <div><span style="color: #ffff00;">+:</span> Banner Camera [Slow, Medium, Fast]</div>
+        <div><span style="color: #ffff00;">F:</span> Free Fly Camera [WASD + Space/Shift + Double-tap W Sprint]</div>
         <div><span style="color: #ffff00;">1-8:</span> Individual Horse Cameras</div>
       </div>
       <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #00ff00;">

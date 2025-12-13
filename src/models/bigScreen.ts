@@ -236,9 +236,8 @@ export function createBigScreen(
       const xPos = -screenWidth / 2 + x * hexSpacing + hexSpacing / 2 + xOffset;
       const yPos = -speakerHeight / 2 + y * hexSpacing + hexSpacing / 2;
 
-      hex.position.set(xPos, yPos, 0.06);
-      hex.rotation.x = Math.PI / 2;
-      hex.rotation.z = Math.PI / 2;
+      hex.position.set(xPos, yPos, -0.05); // Negative Z offset to push hexagons out from panel
+      hex.rotation.x = Math.PI / 2; // Rotate to lie flat against the speaker panel
       hexagonGroup.add(hex);
     }
   }

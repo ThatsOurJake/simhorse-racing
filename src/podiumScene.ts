@@ -200,6 +200,7 @@ export class PodiumScene {
         // Clone the horse mesh for the podium
         const horseMesh = horse.mesh.clone();
         horseMesh.position.set(pos.x, pos.y, 0);
+        horseMesh.rotation.y = -Math.PI / 2; // Start rotated -90 degrees (270 degrees) to face forward
         horseMesh.userData.isPodiumHorse = true;
         this.scene.add(horseMesh);
 

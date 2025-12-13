@@ -9,6 +9,7 @@ import { LeaderboardOverlay } from './leaderboardOverlay';
 import { RidersOverlay } from './ridersOverlay';
 import { PodiumScene } from './podiumScene';
 import { PhotoFinish } from './photoFinish';
+import { FreeFlyCamera } from './freeFlyCamera';
 import type { HorseData } from './horseStats';
 import { getCurrentTheme, getThemeConfig, type ThemeType } from './themeConfig';
 
@@ -118,6 +119,9 @@ const raceManager = new RaceManager(raceTrack);
 // Initialize camera controller with track config for automatic scaling
 const cameraController = new CameraController(camera, raceTrack.getConfig());
 
+// Initialize free fly camera
+const freeFlyCamera = new FreeFlyCamera(camera);
+
 // Initialize debug overlay
 const debugOverlay = new DebugOverlay();
 
@@ -184,6 +188,17 @@ raceManager.setPhotoFinishCallback(() => {
 window.addEventListener('keydown', (event) => {
   const key = event.key.toLowerCase();
 
+  // Free fly camera toggle with 'F'
+  if (key === 'f') {
+    freeFlyCamera.toggle();
+    return;
+  }
+
+  // Don't process other controls if free fly camera is active
+  if (freeFlyCamera.isActivated()) {
+    return;
+  }
+
   // Debug overlay toggle
   if (key === 'd') {
     debugOverlay.toggle();
@@ -230,6 +245,7 @@ window.addEventListener('keydown', (event) => {
         ).filter(h => h !== undefined);
 
         podiumScene.show(topThree);
+        ridersOverlay.hide(); // Hide riders roster when showing podium
         horseEditor.hide();
         leaderboardOverlay.hide();
         photoFinish.show(); // Show photo finish thumbnail on podium
@@ -390,17 +406,22 @@ function animate() {
   const horseNames = horses.map(h => h.data.name);
   const leaderboardHorseNames = leaderboardOrderedHorses.map(h => h.data.name);
 
-  // Update camera based on current mode
-  cameraController.update(
-    raceManager.isRacing() ? leaderboardPositions : horsePositions,
-    trackCenter,
-    getTrackPosition,
-    leadHorseProgress,
-    raceManager.isRacing() ? leaderboardProgress : horses.map(h => h.progress),
-    raceManager.isRacing(),
-    leaderboard.map(entry => entry.name),
-    raceManager.isRacing() ? leaderboardHorseNames : horseNames
-  );
+  // Update free fly camera if active, otherwise update normal camera controller
+  if (freeFlyCamera.isActivated()) {
+    freeFlyCamera.update(deltaTime);
+  } else {
+    // Update camera based on current mode
+    cameraController.update(
+      raceManager.isRacing() ? leaderboardPositions : horsePositions,
+      trackCenter,
+      getTrackPosition,
+      leadHorseProgress,
+      raceManager.isRacing() ? leaderboardProgress : horses.map(h => h.progress),
+      raceManager.isRacing(),
+      leaderboard.map(entry => entry.name),
+      raceManager.isRacing() ? leaderboardHorseNames : horseNames
+    );
+  }
 
   // Update big screen follow camera and render to texture
   const bigScreen = raceTrack.getBigScreen();
