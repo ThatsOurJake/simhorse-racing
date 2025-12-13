@@ -6,6 +6,7 @@ import { DebugOverlay } from './debugOverlay';
 import { RaceManager } from './raceManager';
 import { HorseEditor } from './horseEditor';
 import { LeaderboardOverlay } from './leaderboardOverlay';
+import { CameraIndicator } from './cameraIndicator';
 import { RidersOverlay } from './ridersOverlay';
 import { PodiumScene } from './podiumScene';
 import { PhotoFinish } from './photoFinish';
@@ -145,6 +146,9 @@ debugOverlay.setThemeChangeCallback((newTheme: ThemeType) => {
 // Initialize leaderboard overlay
 const leaderboardOverlay = new LeaderboardOverlay();
 
+// Initialize camera indicator
+const cameraIndicator = new CameraIndicator();
+
 // Initialize riders overlay
 const ridersOverlay = new RidersOverlay();
 
@@ -195,6 +199,13 @@ window.addEventListener('keydown', (event) => {
   // Free fly camera toggle with 'F'
   if (key === 'f') {
     freeFlyCamera.toggle();
+    if (freeFlyCamera.isActivated()) {
+      cameraIndicator.update('freeFly');
+    } else {
+      // When exiting free fly, update to current camera mode
+      const currentMode = cameraController.getCurrentMode();
+      cameraIndicator.update(currentMode);
+    }
     return;
   }
 
@@ -343,28 +354,26 @@ window.addEventListener('keydown', (event) => {
 
   if (key === '0') {
     cameraController.setMode(CameraMode.ORBITAL);
+    cameraIndicator.update('orbital');
     console.log('Camera: Orbital View');
   } else if (key === '9') {
     cameraController.setMode(CameraMode.FOLLOW);
+    cameraIndicator.update('follow');
     console.log('Camera: Follow View');
   } else if (key === '-') {
     cameraController.setMode(CameraMode.FINISH_LINE);
+    cameraIndicator.update('finishLine');
     console.log('Camera: Finish Line View');
-  } else if (key === '=' || key === '+') {
-    if (cameraController.getCurrentMode() === CameraMode.BANNER) {
-      // Already in banner mode, cycle speed
-      cameraController.cycleBannerSpeed();
-    } else {
-      // Switch to banner mode
-      cameraController.setMode(CameraMode.BANNER);
-      console.log('Camera: Banner View (Slow)');
-    }
   } else if (key >= '1' && key <= '8') {
     const horseIndex = parseInt(key) - 1;
     if (horseIndex < horses.length) {
       const isRacing = raceManager.isRacing();
       const leaderboardOrder = leaderboard.map(entry => entry.name);
       cameraController.setMode(CameraMode.HORSE, horseIndex, undefined, isRacing, leaderboardOrder);
+      const horseName = isRacing && horseIndex < leaderboardOrder.length
+        ? leaderboardOrder[horseIndex]
+        : horses[horseIndex].name;
+      cameraIndicator.update('horse', horseName);
       console.log(`Camera: Horse ${key} View`);
     }
   }

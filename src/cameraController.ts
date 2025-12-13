@@ -5,8 +5,7 @@ export const CameraMode = {
   ORBITAL: 'orbital',
   FOLLOW: 'follow',
   HORSE: 'horse',
-  FINISH_LINE: 'finishLine',
-  BANNER: 'banner'
+  FINISH_LINE: 'finishLine'
 } as const;
 
 export type CameraMode = typeof CameraMode[keyof typeof CameraMode];
@@ -33,21 +32,9 @@ export class CameraController {
   private readonly FOLLOW_CAM_HEIGHT = 5;
   private readonly FOLLOW_CAM_BEHIND_DISTANCE = 10; // Distance behind leader (easily adjustable)
 
-  // Banner camera settings
-  private bannerPanProgress: number = 0;
-  private bannerPanDirection: number = 1; // 1 for left-to-right, -1 for right-to-left
-  private bannerSpeedLevel: number = 0; // 0=slow, 1=medium, 2=fast
-  private readonly BANNER_PAN_SPEED_SLOW = 0.03;
-  private readonly BANNER_PAN_SPEED_MEDIUM = 0.06;
-  private readonly BANNER_PAN_SPEED_FAST = 0.12;
-  private readonly trackRadius: number;
-  private readonly trackLength: number;
-
   constructor(camera: THREE.PerspectiveCamera, trackConfig: RaceTrackConfig) {
     this.camera = camera;
     this.trackWidth = trackConfig.width;
-    this.trackRadius = trackConfig.radius;
-    this.trackLength = trackConfig.length;
 
     // Calculate orbital camera position based on track size
     // Position should be high enough to see the whole track
@@ -91,9 +78,6 @@ export class CameraController {
         break;
       case CameraMode.FINISH_LINE:
         this.updateFinishLineCamera(getTrackPosition);
-        break;
-      case CameraMode.BANNER:
-        this.updateBannerCamera();
         break;
     }
   }
@@ -256,11 +240,6 @@ export class CameraController {
   }
 
   public setMode(mode: CameraMode, horseIndex?: number, horseName?: string, isRacing?: boolean, leaderboardOrder?: string[]): void {
-    // Reset banner camera when switching away from it
-    if (this.currentMode === CameraMode.BANNER && mode !== CameraMode.BANNER) {
-      this.resetBannerCamera();
-    }
-
     // Re-enable layer 1 when switching away from finish line camera
     if (this.currentMode === CameraMode.FINISH_LINE && mode !== CameraMode.FINISH_LINE) {
       this.camera.layers.enable(1);
@@ -289,54 +268,6 @@ export class CameraController {
 
   public getCurrentMode(): CameraMode {
     return this.currentMode;
-  }
-
-  public cycleBannerSpeed(): void {
-    this.bannerSpeedLevel = (this.bannerSpeedLevel + 1) % 3;
-    const speedNames = ['Slow', 'Medium', 'Fast'];
-    console.log(`Banner Camera Speed: ${speedNames[this.bannerSpeedLevel]}`);
-  }
-
-  private resetBannerCamera(): void {
-    this.bannerPanProgress = 0;
-    this.bannerPanDirection = 1;
-    this.bannerSpeedLevel = 0;
-  }
-
-  private updateBannerCamera(): void {
-    // Pan left to right and back across the banners on the inner edge of bottom straight
-    // Banners are positioned at z = radius - 2, x varies from -trackLength/2 to +trackLength/2
-
-    // Get current speed based on speed level
-    const speeds = [this.BANNER_PAN_SPEED_SLOW, this.BANNER_PAN_SPEED_MEDIUM, this.BANNER_PAN_SPEED_FAST];
-    const currentSpeed = speeds[this.bannerSpeedLevel];
-
-    // Update pan progress
-    this.bannerPanProgress += currentSpeed * 0.01 * this.bannerPanDirection;
-
-    // Reverse direction when reaching either end
-    if (this.bannerPanProgress >= 1) {
-      this.bannerPanProgress = 1;
-      this.bannerPanDirection = -1; // Start going back
-    } else if (this.bannerPanProgress <= 0) {
-      this.bannerPanProgress = 0;
-      this.bannerPanDirection = 1; // Start going forward
-    }
-
-    // Calculate camera position panning along X axis
-    const bannerZ = this.trackRadius - 2; // Inner edge where banners are
-    const startX = -this.trackLength / 2;
-    const endX = this.trackLength / 2;
-    const cameraX = startX + (endX - startX) * this.bannerPanProgress;
-
-    // Position camera to see FRONT of banners (banners face +Z, so camera at +Z)
-    const cameraZ = bannerZ + 8; // 8 units away from banners in +Z direction
-    const cameraY = 4; // Eye level height
-
-    this.camera.position.set(cameraX, cameraY, cameraZ);
-
-    // Look at the banners (same X, banner Z position, mid height)
-    this.camera.lookAt(cameraX, 3, bannerZ);
   }
 
   public getSelectedHorseIndex(): number {
