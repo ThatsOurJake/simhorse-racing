@@ -229,6 +229,9 @@ export class CameraController {
   ): void {
     if (!getTrackPosition) return;
 
+    // Hide finish banner from this camera view
+    this.camera.layers.disable(1);
+
     // Get the finish line position (at progress 0, which is at the start of bottom straight)
     const finishLinePos = getTrackPosition(0, this.trackWidth / 2); // Center of track
 
@@ -256,6 +259,11 @@ export class CameraController {
     // Reset banner camera when switching away from it
     if (this.currentMode === CameraMode.BANNER && mode !== CameraMode.BANNER) {
       this.resetBannerCamera();
+    }
+
+    // Re-enable layer 1 when switching away from finish line camera
+    if (this.currentMode === CameraMode.FINISH_LINE && mode !== CameraMode.FINISH_LINE) {
+      this.camera.layers.enable(1);
     }
 
     this.currentMode = mode;

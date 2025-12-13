@@ -32,6 +32,9 @@ export class PhotoFinish {
       1000
     );
 
+    // Hide finish banner from photo finish (layer 1)
+    tempCamera.layers.disable(1);
+
     // Get the finish line camera position and lookAt
     const finishView = getFinishLineCameraView();
     tempCamera.position.copy(finishView.position);

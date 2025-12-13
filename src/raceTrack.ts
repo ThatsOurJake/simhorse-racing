@@ -143,12 +143,14 @@ export class RaceTrack {
     const leftPost = new THREE.Mesh(postGeometry, postMaterial);
     leftPost.position.set(-this.config.length / 2, bannerHeight / 2, this.config.radius - 2);
     leftPost.castShadow = true;
+    leftPost.layers.set(1); // Set to layer 1 only (hidden from finish line camera)
     this.group.add(leftPost);
 
     // Right post
     const rightPost = new THREE.Mesh(postGeometry, postMaterial);
     rightPost.position.set(-this.config.length / 2, bannerHeight / 2, this.config.radius + this.config.width + 2);
     rightPost.castShadow = true;
+    rightPost.layers.set(1); // Set to layer 1 only (hidden from finish line camera)
     this.group.add(rightPost);
 
     // Banner board
@@ -157,6 +159,7 @@ export class RaceTrack {
     const banner = new THREE.Mesh(bannerGeometry, bannerMaterial);
     banner.position.set(-this.config.length / 2, bannerHeight, this.config.radius + this.config.width / 2);
     banner.castShadow = true;
+    banner.layers.set(1); // Set to layer 1 only (hidden from finish line camera)
     this.group.add(banner);
 
     // Banner text
@@ -179,6 +182,7 @@ export class RaceTrack {
     const textMesh = new THREE.Mesh(textGeometry, textMaterial);
     textMesh.position.set(-this.config.length / 2 - 0.11, bannerHeight, this.config.radius + this.config.width / 2);
     textMesh.rotation.y = Math.PI / 2;
+    textMesh.layers.set(1); // Set to layer 1 only (hidden from finish line camera)
     this.group.add(textMesh);
   }
 

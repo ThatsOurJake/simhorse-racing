@@ -314,6 +314,17 @@ export class RaceManager {
       horse.mesh.position.y = position.y + 0.5; // Keep horse above ground
       horse.mesh.position.z = position.z;
 
+      // Calculate forward direction for rotation
+      // Sample a point slightly ahead to determine facing direction
+      const lookAheadDistance = 0.1; // Small distance ahead
+      const futurePosition = this.raceTrack.getTrackPosition(horse.progress + lookAheadDistance, horse.laneOffset);
+      const direction = new THREE.Vector3().subVectors(futurePosition, position).normalize();
+
+      // Calculate rotation to face the direction of travel
+      // atan2 gives us the angle in the XZ plane
+      const targetRotation = Math.atan2(direction.x, direction.z);
+      horse.mesh.rotation.y = targetRotation;
+
       // Update name label position (above horse)
       if (horse.mesh.userData.nameLabel) {
         const nameLabel = horse.mesh.userData.nameLabel as THREE.Sprite;

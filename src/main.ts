@@ -137,13 +137,15 @@ horseEditor.onHorsesChange((horses: HorseData[]) => {
 
 // Set up photo finish callback
 raceManager.setPhotoFinishCallback(() => {
-  // Get finish line camera view
+  // Get finish line camera view - match the finish line camera settings
   const getFinishLineCameraView = () => {
-    const finishLinePos = raceTrack.getTrackPosition(0, 6);
-    const sideOffset = 10;
+    const trackConfig = raceTrack.getConfig();
+    const finishLinePos = raceTrack.getTrackPosition(0, trackConfig.width / 2);
+    const finishLineSideOffset = trackConfig.width * 0.9; // Same as cameraController
+    const finishLineCameraHeight = trackConfig.barrierHeight * 3.5; // Same as cameraController
     return {
-      position: new THREE.Vector3(finishLinePos.x, 6, finishLinePos.z + sideOffset),
-      lookAt: new THREE.Vector3(finishLinePos.x, 1.5, finishLinePos.z)
+      position: new THREE.Vector3(finishLinePos.x, finishLineCameraHeight, finishLinePos.z + finishLineSideOffset),
+      lookAt: new THREE.Vector3(finishLinePos.x, 0.8, finishLinePos.z)
     };
   };
 
