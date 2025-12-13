@@ -94,20 +94,19 @@ export function createBannerFabric(
   const name = horse.name;
   const lowerHalfY = canvas.height * 0.75; // Center of lower half
 
-  // Split name into 2 lines if longer than 8 characters
-  if (name.length > 8) {
-    // Try to split at a space if possible
+  // Split name into 2 lines if it contains a space (preferably at the first space)
+  const firstSpace = name.indexOf(' ');
+  if (firstSpace > 0 && firstSpace < name.length - 1) {
+    // Split at the first space
+    const line1 = name.substring(0, firstSpace).trim();
+    const line2 = name.substring(firstSpace + 1).trim();
+    context.fillText(line1, canvas.width / 2, lowerHalfY - 20);
+    context.fillText(line2, canvas.width / 2, lowerHalfY + 20);
+  } else if (name.length > 8) {
+    // Fallback: split at midpoint if no space
     const midPoint = Math.floor(name.length / 2);
-    let splitIndex = name.lastIndexOf(' ', midPoint);
-
-    if (splitIndex === -1 || splitIndex < midPoint - 3) {
-      // No good space found, split at midpoint
-      splitIndex = midPoint;
-    }
-
-    const line1 = name.substring(0, splitIndex).trim();
-    const line2 = name.substring(splitIndex).trim();
-
+    const line1 = name.substring(0, midPoint).trim();
+    const line2 = name.substring(midPoint).trim();
     context.fillText(line1, canvas.width / 2, lowerHalfY - 20);
     context.fillText(line2, canvas.width / 2, lowerHalfY + 20);
   } else {

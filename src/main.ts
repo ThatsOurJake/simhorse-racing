@@ -273,6 +273,7 @@ window.addEventListener('keydown', (event) => {
         horseEditor.hide();
         leaderboardOverlay.hide();
         photoFinish.show(); // Show photo finish thumbnail on podium
+        cameraIndicator.hide(); // Hide camera overlay on podium
         console.log('Showing podium...');
       }
     }
@@ -301,6 +302,7 @@ window.addEventListener('keydown', (event) => {
         leaderboardOverlay.hide();
       }
 
+      cameraIndicator.show(); // Show camera overlay when returning to main
       console.log('Returning to main view...');
     }
     return;
@@ -372,7 +374,7 @@ window.addEventListener('keydown', (event) => {
       cameraController.setMode(CameraMode.HORSE, horseIndex, undefined, isRacing, leaderboardOrder);
       const horseName = isRacing && horseIndex < leaderboardOrder.length
         ? leaderboardOrder[horseIndex]
-        : horses[horseIndex].name;
+        : horses[horseIndex].data.name;
       cameraIndicator.update('horse', horseName);
       console.log(`Camera: Horse ${key} View`);
     }
