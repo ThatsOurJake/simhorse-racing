@@ -10,7 +10,7 @@ import { RidersOverlay } from './ridersOverlay';
 import { PodiumScene } from './podiumScene';
 import { PhotoFinish } from './photoFinish';
 import { FreeFlyCamera } from './freeFlyCamera';
-import { updateSpectatorAnimations, setRaceActive } from './models/bleachers';
+import { updateSpectatorAnimations, setRaceActive, startCrowdWave, isCrowdWaveActive } from './models/bleachers';
 import type { HorseData } from './horseStats';
 import { getCurrentTheme, getThemeConfig, type ThemeType } from './themeConfig';
 
@@ -195,6 +195,15 @@ window.addEventListener('keydown', (event) => {
   // Free fly camera toggle with 'F'
   if (key === 'f') {
     freeFlyCamera.toggle();
+    return;
+  }
+
+  // Trigger crowd wave with 'T' (works in free cam too)
+  if (key === 't') {
+    if (currentScreen === ScreenState.MAIN && !isCrowdWaveActive()) {
+      startCrowdWave();
+      console.log('Crowd wave triggered!');
+    }
     return;
   }
 

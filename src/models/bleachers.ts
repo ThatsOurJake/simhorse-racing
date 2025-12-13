@@ -3,9 +3,11 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import type { RaceTrackConfig } from '../raceTrack';
 import { createSpectator } from './spectator';
 import { SpectatorAnimationController, type AnimatedSpectator } from '../animations/spectatorAnimations';
+import { CrowdWaveController } from '../animations/crowdWave';
 
 // Global animation controller for all bleacher spectators
 const animationController = new SpectatorAnimationController();
+const waveController = new CrowdWaveController();
 
 // Animation probability (60% of spectators will be animated)
 const ANIMATION_PROBABILITY = 0.6;
@@ -13,8 +15,9 @@ const ANIMATION_PROBABILITY = 0.6;
 /**
  * Adds spectators to a bleacher
  * @param bleacher - The bleacher object to add spectators to
+ * @param bleacherIndex - Index for wave ordering
  */
-function addSpectatorsToBlacher(bleacher: THREE.Object3D): void {
+function addSpectatorsToBlacher(bleacher: THREE.Object3D, bleacherIndex: number): void {
   // Find the Seat_0 object specifically
   let seatObject: THREE.Object3D | undefined;
   bleacher.traverse((child) => {
@@ -38,9 +41,12 @@ function addSpectatorsToBlacher(bleacher: THREE.Object3D): void {
   ];
 
   const spectatorWidth = 0.3; // Width of spectator body
-  const xMin = -2.05 + spectatorWidth / 2; // Keep spectators fully on platform
-  const xMax = 2.05 - spectatorWidth / 2;
+  const spectatorHeight = 0.6; // Total height of spectator (2 cubes x 0.3)
+  const platformEdgeBuffer = spectatorWidth / 2; // Keep spectators fully on platform
+  const xMin = -2.05 + platformEdgeBuffer;
+  const xMax = 2.05 - platformEdgeBuffer;
   const minSpacing = 0.5; // Minimum distance between spectator centers
+  const xRange = xMax - xMin;
 
   for (let level = 0; level < 4; level++) {
     const platform = platforms[level];
@@ -69,9 +75,20 @@ function addSpectatorsToBlacher(bleacher: THREE.Object3D): void {
 
         const spectatorData = createSpectator();
         const spectator = spectatorData.group;
-        spectator.position.set(xPos, platform.y + 0.3, platform.z);
+        const yPos = platform.y + spectatorHeight / 2;
+        spectator.position.set(xPos, yPos, platform.z);
         spectator.castShadow = true;
         seatObject.add(spectator);
+
+        // Add to wave controller with normalized position for right-to-left ripple
+        const normalizedX = 1 - ((xPos - xMin) / xRange); // 1.0 (right) to 0.0 (left)
+        waveController.addSpectator({
+          group: spectator,
+          topCube: spectatorData.topCube,
+          originalY: yPos,
+          bleacherIndex: bleacherIndex,
+          positionInBleacher: normalizedX,
+        });
 
         // Randomly decide if this spectator should be animated
         const isAnimated = Math.random() < ANIMATION_PROBABILITY;
@@ -106,6 +123,13 @@ export function loadBleachers(
       // Successfully loaded the model
       const bleacherModel = gltf.scene;
 
+      // Track bleacher indices for wave ordering
+      let bleacherIndex = 0;
+      const topBleacherIndices: number[] = [];
+      const rightCurveBleacherIndices: number[] = [];
+      const bottomBleacherIndices: number[] = [];
+      const leftCurveBleacherIndices: number[] = [];
+
       // Straight sections bleachers
       const numStraightBleachers = 4;
       const spacing = config.length / (numStraightBleachers - 1);
@@ -132,7 +156,9 @@ export function loadBleachers(
           });
           group.add(topBleacher);
 
-          addSpectatorsToBlacher(topBleacher);
+          topBleacherIndices.push(bleacherIndex);
+          addSpectatorsToBlacher(topBleacher, bleacherIndex);
+          bleacherIndex++;
         }
 
         // Bottom side bleachers (outer side of bottom straight)
@@ -152,7 +178,9 @@ export function loadBleachers(
         });
         group.add(bottomBleacher);
 
-        addSpectatorsToBlacher(bottomBleacher);
+        bottomBleacherIndices.push(bleacherIndex);
+        addSpectatorsToBlacher(bottomBleacher, bleacherIndex);
+        bleacherIndex++;
       }
 
       // Curved sections bleachers
@@ -182,7 +210,9 @@ export function loadBleachers(
         });
         group.add(bleacher);
 
-        addSpectatorsToBlacher(bleacher);
+        rightCurveBleacherIndices.push(bleacherIndex);
+        addSpectatorsToBlacher(bleacher, bleacherIndex);
+        bleacherIndex++;
       }
 
       // Left curve (from top straight to bottom straight)
@@ -207,8 +237,32 @@ export function loadBleachers(
         });
         group.add(bleacher);
 
-        addSpectatorsToBlacher(bleacher);
+        leftCurveBleacherIndices.push(bleacherIndex);
+        addSpectatorsToBlacher(bleacher, bleacherIndex);
+        bleacherIndex++;
       }
+
+      // Set up wave order: Clockwise around track starting from top-left
+      // top-left (0) -> left curve (13-10) -> bottom (1,2,3,5) -> right curve (9-6) -> top-right (4)
+      const waveOrder = [
+        0,  // top-left
+        13, // left curve (reversed)
+        12, // left curve
+        11, // left curve
+        10, // left curve
+        1,  // bottom-left
+        2,  // bottom
+        3,  // bottom
+        5,  // bottom-right
+        9,  // right curve (reversed)
+        8,  // right curve
+        7,  // right curve
+        6,  // right curve
+        4,  // top-right
+      ];
+
+      waveController.setBleacherWaveOrder(waveOrder);
+      console.log('Wave order set:', waveOrder);
 
       // Add the group to the scene after all bleachers are set up
       scene.add(group);
@@ -227,7 +281,13 @@ export function loadBleachers(
  * @param deltaTime - Time elapsed since last frame in seconds
  */
 export function updateSpectatorAnimations(deltaTime: number): void {
-  animationController.update(deltaTime);
+  // Update wave controller
+  waveController.update(deltaTime);
+
+  // Only update normal animations if wave is not active
+  if (!waveController.isWaveRunning()) {
+    animationController.update(deltaTime);
+  }
 }
 
 /**
@@ -236,4 +296,18 @@ export function updateSpectatorAnimations(deltaTime: number): void {
  */
 export function setRaceActive(isActive: boolean): void {
   animationController.setRaceActive(isActive);
+}
+
+/**
+ * Trigger the crowd wave animation
+ */
+export function startCrowdWave(): void {
+  waveController.startWave();
+}
+
+/**
+ * Check if crowd wave is currently running
+ */
+export function isCrowdWaveActive(): boolean {
+  return waveController.isWaveRunning();
 }

@@ -291,6 +291,7 @@ export function renderDebugContent(currentTheme: string = 'christmas'): string {
       <div><span style="color: #ffff00;">R:</span> Reset Race</div>
       <div><span style="color: #ffff00;">E:</span> Toggle Horse Editor</div>
       <div><span style="color: #ffff00;">L:</span> Toggle Leaderboard</div>
+      <div><span style="color: #ffff00;">T:</span> Trigger Crowd Wave</div>
       <div><span style="color: #ffff00;">D:</span> Toggle Debug Info</div>
       <div><span style="color: #ffff00;">Q:</span> Show Riders Roster</div>
       <div><span style="color: #ffff00;">W:</span> Show Podium</div>
