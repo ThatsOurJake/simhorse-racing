@@ -10,6 +10,7 @@ import { RidersOverlay } from './ridersOverlay';
 import { PodiumScene } from './podiumScene';
 import { PhotoFinish } from './photoFinish';
 import { FreeFlyCamera } from './freeFlyCamera';
+import { updateSpectatorAnimations, setRaceActive } from './models/bleachers';
 import type { HorseData } from './horseStats';
 import { getCurrentTheme, getThemeConfig, type ThemeType } from './themeConfig';
 
@@ -43,6 +44,8 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.set(0, 35, 45);
 camera.lookAt(0, 0, 0);
+// Enable layer 1 to see start/finish banner and other layer 1 objects
+camera.layers.enable(1);
 
 // Renderer setup
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -165,6 +168,7 @@ horseEditor.onHorsesChange((horses: HorseData[]) => {
   raceManager.setHorses(horses, raceSeed);
   raceManager.resetRace();
   raceTrack.setRacers(horses); // Update racer banners on track
+  setRaceActive(false); // Return spectators to calm animations when horses change
 });
 
 // Set up photo finish callback
@@ -288,6 +292,7 @@ window.addEventListener('keydown', (event) => {
       horseEditor.close(); // Close editor during race
       leaderboardOverlay.reset(); // Reset leaderboard
       raceManager.startRace();
+      setRaceActive(true); // Activate excited spectator animations
       console.log('Race starting...');
     }
     return;
@@ -313,6 +318,7 @@ window.addEventListener('keydown', (event) => {
       raceManager.resetRace();
       leaderboardOverlay.reset();
       photoFinish.clear(); // Clear photo finish on race reset
+      setRaceActive(false); // Return spectators to calm animations
       console.log('Race reset!');
     }
     return;
@@ -376,6 +382,9 @@ function animate() {
 
   // Update race (moves horses)
   raceManager.update(deltaTime);
+
+  // Update spectator animations based on race state
+  updateSpectatorAnimations(deltaTime);
 
   // Update leaderboard if racing
   if (raceManager.isRacing()) {

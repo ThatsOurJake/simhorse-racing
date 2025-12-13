@@ -274,22 +274,24 @@ export function applyShockedFaceTexture(horseMesh: THREE.Mesh): void {
 
 /**
  * Create a 3D red nose that sticks out from the front of the cube
+ * @param cubeDepth - The depth of the cube to position the nose on (default 1.0 for horse)
  */
-export function createRedNose(): THREE.Mesh {
+export function createRedNose(cubeDepth: number = 1.0): THREE.Mesh {
   const noseGeometry = new THREE.SphereGeometry(0.12, 8, 8);
   const noseMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });
   const nose = new THREE.Mesh(noseGeometry, noseMaterial);
 
   // Position nose on front center of cube
-  nose.position.set(0, 0, 0.5 + 0.06); // Front face + half nose radius
+  nose.position.set(0, 0, cubeDepth / 2 + 0.06); // Front face + half nose radius
 
   return nose;
 }
 
 /**
  * Create 3D glasses that sit on the front of the cube
+ * @param cubeDepth - The depth of the cube to position the glasses on (default 1.0 for horse)
  */
-export function createGlasses(): THREE.Group {
+export function createGlasses(cubeDepth: number = 1.0): THREE.Group {
   const glassesGroup = new THREE.Group();
   const frameMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
   const lensMaterial = new THREE.MeshLambertMaterial({
@@ -298,19 +300,22 @@ export function createGlasses(): THREE.Group {
     opacity: 0.3
   });
 
+  const frontZ = cubeDepth / 2 + 0.05;
+  const eyeY = 0.08; // Slight upward offset to align with eyes
+
   // Left lens frame (torus)
   const leftFrame = new THREE.Mesh(
     new THREE.TorusGeometry(0.15, 0.02, 6, 8),
     frameMaterial
   );
-  leftFrame.position.set(-0.2, 0, 0.52);
+  leftFrame.position.set(-0.2, eyeY, frontZ);
 
   // Right lens frame
   const rightFrame = new THREE.Mesh(
     new THREE.TorusGeometry(0.15, 0.02, 6, 8),
     frameMaterial
   );
-  rightFrame.position.set(0.2, 0, 0.52);
+  rightFrame.position.set(0.2, eyeY, frontZ);
 
   // Bridge connecting the lenses
   const bridge = new THREE.Mesh(
@@ -318,21 +323,21 @@ export function createGlasses(): THREE.Group {
     frameMaterial
   );
   bridge.rotation.z = Math.PI / 2;
-  bridge.position.set(0, 0, 0.52);
+  bridge.position.set(0, eyeY, frontZ);
 
   // Left lens
   const leftLens = new THREE.Mesh(
     new THREE.CircleGeometry(0.14, 8),
     lensMaterial
   );
-  leftLens.position.set(-0.2, 0, 0.53);
+  leftLens.position.set(-0.2, eyeY, frontZ + 0.01);
 
   // Right lens
   const rightLens = new THREE.Mesh(
     new THREE.CircleGeometry(0.14, 8),
     lensMaterial
   );
-  rightLens.position.set(0.2, 0, 0.53);
+  rightLens.position.set(0.2, eyeY, frontZ + 0.01);
 
   glassesGroup.add(leftFrame, rightFrame, bridge, leftLens, rightLens);
   return glassesGroup;

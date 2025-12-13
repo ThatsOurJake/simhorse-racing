@@ -1,14 +1,105 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import type { RaceTrackConfig } from '../raceTrack';
+import { createSpectator } from './spectator';
+import { SpectatorAnimationController, type AnimatedSpectator } from '../animations/spectatorAnimations';
+
+// Global animation controller for all bleacher spectators
+const animationController = new SpectatorAnimationController();
+
+// Animation probability (60% of spectators will be animated)
+const ANIMATION_PROBABILITY = 0.6;
 
 /**
- * Loads and positions bleacher models around the race track
- * @param group - THREE.Group to add bleachers to
- * @param config - Race track configuration
+ * Adds spectators to a bleacher
+ * @param bleacher - The bleacher object to add spectators to
  */
-export function loadBleachers(group: THREE.Group, config: RaceTrackConfig): void {
+function addSpectatorsToBlacher(bleacher: THREE.Object3D): void {
+  // Find the Seat_0 object specifically
+  let seatObject: THREE.Object3D | undefined;
+  bleacher.traverse((child) => {
+    if (child.name === 'Seat_0') {
+      seatObject = child as THREE.Object3D;
+    }
+  });
+
+  if (!seatObject) {
+    return;
+  }
+
+  // Platform positions from the actual bleacher geometry (Y, Z center)
+  // These are relative to the Seat_0 object's local coordinates
+  // Platforms step back as they go up
+  const platforms = [
+    { y: -0.6, z: 0.63 },   // Bottom platform
+    { y: -0.2, z: 0.25 },   // Second platform
+    { y: 0.2, z: -0.13 },   // Third platform
+    { y: 0.6, z: -0.51 }    // Top platform
+  ];
+
+  const spectatorWidth = 0.3; // Width of spectator body
+  const xMin = -2.05 + spectatorWidth / 2; // Keep spectators fully on platform
+  const xMax = 2.05 - spectatorWidth / 2;
+  const minSpacing = 0.5; // Minimum distance between spectator centers
+
+  for (let level = 0; level < 4; level++) {
+    const platform = platforms[level];
+
+    // Random count of spectators for this level (3-8)
+    const spectatorCount = Math.floor(Math.random() * 6) + 3; // 3 to 8
+    const usedPositions: number[] = [];
+
+    for (let i = 0; i < spectatorCount; i++) {
+      // Find a valid X position that doesn't overlap with existing spectators
+      let xPos: number;
+      let attempts = 0;
+      const maxAttempts = 50;
+
+      do {
+        xPos = xMin + Math.random() * (xMax - xMin);
+        attempts++;
+      } while (
+        attempts < maxAttempts &&
+        usedPositions.some(pos => Math.abs(pos - xPos) < minSpacing)
+      );
+
+      // If we found a valid position, create the spectator
+      if (attempts < maxAttempts) {
+        usedPositions.push(xPos);
+
+        const spectatorData = createSpectator();
+        const spectator = spectatorData.group;
+        spectator.position.set(xPos, platform.y + 0.3, platform.z);
+        spectator.castShadow = true;
+        seatObject.add(spectator);
+
+        // Randomly decide if this spectator should be animated
+        const isAnimated = Math.random() < ANIMATION_PROBABILITY;
+
+        if (isAnimated) {
+          const animatedSpectator: AnimatedSpectator = {
+            group: spectator,
+            topCube: spectatorData.topCube,
+            isAnimated: true,
+            phaseOffset: Math.random() * Math.PI * 2, // Random start phase
+            swaySpeed: 0.5 + Math.random() * 0.5, // 0.5-1.0 Hz
+            bobSpeed: 0.8 + Math.random() * 0.4, // 0.8-1.2 Hz
+            jumpSpeed: 2.0 + Math.random() * 1.0, // 2.0-3.0 Hz
+          };
+          animationController.addSpectator(animatedSpectator);
+        }
+      }
+    }
+  }
+}
+
+export function loadBleachers(
+  scene: THREE.Scene,
+  config: RaceTrackConfig
+): THREE.Group {
+  const group = new THREE.Group();
   const loader = new GLTFLoader();
+
   loader.load(
     '/bleacher.glb',
     (gltf) => {
@@ -40,6 +131,8 @@ export function loadBleachers(group: THREE.Group, config: RaceTrackConfig): void
             }
           });
           group.add(topBleacher);
+
+          addSpectatorsToBlacher(topBleacher);
         }
 
         // Bottom side bleachers (outer side of bottom straight)
@@ -58,6 +151,8 @@ export function loadBleachers(group: THREE.Group, config: RaceTrackConfig): void
           }
         });
         group.add(bottomBleacher);
+
+        addSpectatorsToBlacher(bottomBleacher);
       }
 
       // Curved sections bleachers
@@ -86,6 +181,8 @@ export function loadBleachers(group: THREE.Group, config: RaceTrackConfig): void
           }
         });
         group.add(bleacher);
+
+        addSpectatorsToBlacher(bleacher);
       }
 
       // Left curve (from top straight to bottom straight)
@@ -109,14 +206,34 @@ export function loadBleachers(group: THREE.Group, config: RaceTrackConfig): void
           }
         });
         group.add(bleacher);
+
+        addSpectatorsToBlacher(bleacher);
       }
+
+      // Add the group to the scene after all bleachers are set up
+      scene.add(group);
     },
-    (progress) => {
-      // Optional: loading progress
-      console.log('Loading bleachers:', (progress.loaded / progress.total * 100).toFixed(0) + '%');
-    },
+    undefined,
     (error) => {
       console.error('Error loading bleacher model:', error);
     }
   );
+
+  return group;
+}
+
+/**
+ * Update spectator animations
+ * @param deltaTime - Time elapsed since last frame in seconds
+ */
+export function updateSpectatorAnimations(deltaTime: number): void {
+  animationController.update(deltaTime);
+}
+
+/**
+ * Set whether the race is active (affects animation style)
+ * @param isActive - True if race is in progress
+ */
+export function setRaceActive(isActive: boolean): void {
+  animationController.setRaceActive(isActive);
 }
