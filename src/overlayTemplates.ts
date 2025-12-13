@@ -280,7 +280,8 @@ export const debugOverlayStyles = `
   max-width: 400px;
 `;
 
-export function renderDebugContent(): string {
+export function renderDebugContent(currentTheme: string = 'christmas'): string {
+  const themeName = currentTheme === 'normal' ? 'Normal' : 'Christmas';
   return `
     <div style="font-weight: bold; margin-bottom: 10px; color: #00ff00; font-size: 14px;">
       ⌨️ KEYBOARD CONTROLS
@@ -298,7 +299,23 @@ export function renderDebugContent(): string {
         <div><span style="color: #ffff00;">0:</span> Orbital Camera</div>
         <div><span style="color: #ffff00;">9:</span> Follow Camera</div>
         <div><span style="color: #ffff00;">-:</span> Finish Line Camera</div>
+        <div><span style="color: #ffff00;">+:</span> Banner Camera [Slow, Medium, Fast]</div>
         <div><span style="color: #ffff00;">1-8:</span> Individual Horse Cameras</div>
+      </div>
+      <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #00ff00;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: #ffff00;">Theme:</span>
+          <button id="themeToggle" style="
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 5px 12px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            border-radius: 4px;
+          ">${themeName}</button>
+        </div>
       </div>
     </div>
   `;

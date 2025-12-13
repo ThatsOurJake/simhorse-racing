@@ -1,4 +1,9 @@
 import * as THREE from 'three';
+import { getCurrentTheme, getThemeConfig, type ThemeType } from './themeConfig';
+import type { HorseData } from './horseStats';
+import { createBannerFabric } from './models/racerBanners';
+import { loadBleachers } from './models/bleachers';
+import { createDistantHills } from './models/distantHills';
 
 export interface RaceTrackConfig {
   length: number;        // Length of straight sections
@@ -11,6 +16,9 @@ export interface RaceTrackConfig {
 export class RaceTrack {
   private group: THREE.Group;
   private config: RaceTrackConfig;
+  private ground: THREE.Mesh | null = null;
+  private currentTheme: ThemeType;
+  private horses: HorseData[] = [];
 
   constructor(config?: Partial<RaceTrackConfig>) {
     this.config = {
@@ -22,11 +30,15 @@ export class RaceTrack {
       ...config
     };
 
+    this.currentTheme = getCurrentTheme();
     this.group = new THREE.Group();
     this.createTrack();
     this.createBarriers();
     this.createFinishLine();
-    this.createFinalStretchSign();
+    this.createFinalStretchBanner();
+    this.createFinishBanner();
+    createDistantHills(this.group, this.config, this.currentTheme);
+    loadBleachers(this.group, this.config);
   }
 
   private createFinishLine(): void {
@@ -69,69 +81,105 @@ export class RaceTrack {
     }
   }
 
-  private createFinalStretchSign(): void {
-    // Calculate 85% position on track (start of final stretch)
-    const totalLength = this.config.length * 2 + Math.PI * this.config.radius * 2;
-    const finalStretchDistance = totalLength * 0.85;
+  private createFinalStretchBanner(): void {
+    // Position banner on the left curve (second curve) at approximately the midpoint
+    // The left curve is the 4th section of the track, connecting top straight back to start
+    const bannerHeight = 4;
+    const curveRadius = this.config.radius + this.config.width / 2;
 
-    // Get position for the sign (on outer edge of track)
-    const signPosition = this.getTrackPosition(finalStretchDistance, this.config.width + 1);
+    // Position at angle -π (180 degrees) - middle of left curve
+    const angle = -Math.PI;
+    const bannerX = -this.config.length / 2 + Math.cos(angle) * curveRadius;
+    const bannerZ = Math.sin(angle) * curveRadius;
 
-    // Create sign post
-    const postGeometry = new THREE.CylinderGeometry(0.1, 0.1, 3, 8);
-    const postMaterial = new THREE.MeshStandardMaterial({
-      color: 0x333333,
-      metalness: 0.3,
-      roughness: 0.7
-    });
-    const post = new THREE.Mesh(postGeometry, postMaterial);
-    post.position.set(signPosition.x, 1.5, signPosition.z);
-    post.castShadow = true;
-    this.group.add(post);
+    // Calculate width to span across the track (perpendicular to curve)
+    const bannerWidth = this.config.width + 4;
 
-    // Create sign board
-    const boardGeometry = new THREE.BoxGeometry(4, 1, 0.2);
-    const boardMaterial = new THREE.MeshStandardMaterial({
-      color: 0xffff00,
-      metalness: 0.2,
-      roughness: 0.6
-    });
-    const board = new THREE.Mesh(boardGeometry, boardMaterial);
-    board.position.set(signPosition.x, 3.5, signPosition.z);
-    board.castShadow = true;
-    this.group.add(board);
+    // Posts positioned on inner and outer edges
+    const postGeometry = new THREE.CylinderGeometry(0.15, 0.15, bannerHeight, 8);
+    const postMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00, metalness: 0.3, roughness: 0.7 });
 
-    // Create text using canvas texture
+    // Inner post
+    const innerRadius = this.config.radius - 2;
+    const innerPost = new THREE.Mesh(postGeometry, postMaterial);
+    innerPost.position.set(
+      -this.config.length / 2 + Math.cos(angle) * innerRadius,
+      bannerHeight / 2,
+      Math.sin(angle) * innerRadius
+    );
+    innerPost.castShadow = true;
+    this.group.add(innerPost);
+
+    // Outer post
+    const outerRadius = this.config.radius + this.config.width + 2;
+    const outerPost = new THREE.Mesh(postGeometry, postMaterial);
+    outerPost.position.set(
+      -this.config.length / 2 + Math.cos(angle) * outerRadius,
+      bannerHeight / 2,
+      Math.sin(angle) * outerRadius
+    );
+    outerPost.castShadow = true;
+    this.group.add(outerPost);
+
+    // Banner board (oriented radially across the curve)
+    const bannerGeometry = new THREE.BoxGeometry(0.2, 1, bannerWidth);
+    const bannerMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00, metalness: 0.2, roughness: 0.6 });
+    const banner = new THREE.Mesh(bannerGeometry, bannerMaterial);
+    banner.position.set(bannerX, bannerHeight, bannerZ);
+    banner.rotation.y = angle + Math.PI / 2; // Perpendicular to the curve radius
+    banner.castShadow = true;
+    this.group.add(banner);
+  }
+
+  private createFinishBanner(): void {
+    // Create overhead banner at finish line
+    const bannerHeight = 4;
+    const bannerWidth = this.config.width + 4;
+
+    // Left post
+    const postGeometry = new THREE.CylinderGeometry(0.15, 0.15, bannerHeight, 8);
+    const postMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.3, roughness: 0.7 });
+
+    const leftPost = new THREE.Mesh(postGeometry, postMaterial);
+    leftPost.position.set(-this.config.length / 2, bannerHeight / 2, this.config.radius - 2);
+    leftPost.castShadow = true;
+    this.group.add(leftPost);
+
+    // Right post
+    const rightPost = new THREE.Mesh(postGeometry, postMaterial);
+    rightPost.position.set(-this.config.length / 2, bannerHeight / 2, this.config.radius + this.config.width + 2);
+    rightPost.castShadow = true;
+    this.group.add(rightPost);
+
+    // Banner board
+    const bannerGeometry = new THREE.BoxGeometry(0.2, 1, bannerWidth);
+    const bannerMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000, metalness: 0.2, roughness: 0.6 });
+    const banner = new THREE.Mesh(bannerGeometry, bannerMaterial);
+    banner.position.set(-this.config.length / 2, bannerHeight, this.config.radius + this.config.width / 2);
+    banner.castShadow = true;
+    this.group.add(banner);
+
+    // Banner text
     const canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = 128;
     const context = canvas.getContext('2d')!;
-
-    // Background
-    context.fillStyle = '#ffff00';
+    context.fillStyle = '#ff0000';
     context.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Text
-    context.fillStyle = '#000000';
-    context.font = 'bold 48px Arial';
+    context.fillStyle = '#ffffff';
+    context.font = 'bold 72px Arial';
     context.textAlign = 'center';
     context.textBaseline = 'middle';
-    context.fillText('FINAL STRETCH', canvas.width / 2, canvas.height / 2);
+    context.fillText('FINISH', canvas.width / 2, canvas.height / 2);
 
     const texture = new THREE.CanvasTexture(canvas);
     const textMaterial = new THREE.MeshBasicMaterial({ map: texture });
-    const textGeometry = new THREE.PlaneGeometry(3.8, 0.9);
+    const textGeometry = new THREE.PlaneGeometry(bannerWidth - 0.5, 0.9);
 
-    // Front side text
-    const textMeshFront = new THREE.Mesh(textGeometry, textMaterial);
-    textMeshFront.position.set(signPosition.x, 3.5, signPosition.z + 0.11);
-    this.group.add(textMeshFront);
-
-    // Back side text
-    const textMeshBack = new THREE.Mesh(textGeometry, textMaterial);
-    textMeshBack.position.set(signPosition.x, 3.5, signPosition.z - 0.11);
-    textMeshBack.rotation.y = Math.PI;
-    this.group.add(textMeshBack);
+    const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+    textMesh.position.set(-this.config.length / 2 - 0.11, bannerHeight, this.config.radius + this.config.width / 2);
+    textMesh.rotation.y = Math.PI / 2;
+    this.group.add(textMesh);
   }
 
   private createTrack(): void {
@@ -217,8 +265,11 @@ export class RaceTrack {
   }
 
   private createBarriers(): void {
+    const themeConfig = getThemeConfig(this.currentTheme);
+    const isCandyCane = themeConfig.fenceType === 'candy-cane';
+
     const postMaterial = new THREE.MeshStandardMaterial({
-      color: 0x8b4513, // Brown for posts
+      color: isCandyCane ? 0xffffff : 0x8b4513, // White for candy canes, brown for posts
       roughness: 0.7,
       metalness: 0.1
     });
@@ -237,14 +288,16 @@ export class RaceTrack {
       railMaterial,
       this.config.length,
       -(this.config.radius + this.config.width),
-      postSpacing
+      postSpacing,
+      isCandyCane
     );
     this.createStraightBarrierWithPosts(
       postMaterial,
       railMaterial,
       this.config.length,
       this.config.radius + this.config.width,
-      postSpacing
+      postSpacing,
+      isCandyCane
     );
 
     // Inner barriers (straight sections)
@@ -253,21 +306,23 @@ export class RaceTrack {
       railMaterial,
       this.config.length,
       -(this.config.radius),
-      postSpacing
+      postSpacing,
+      isCandyCane
     );
     this.createStraightBarrierWithPosts(
       postMaterial,
       railMaterial,
       this.config.length,
       this.config.radius,
-      postSpacing
+      postSpacing,
+      isCandyCane
     );
 
     // Curved barriers
-    this.createCurvedBarrierWithPosts(postMaterial, railMaterial, true, true);   // Right outer
-    this.createCurvedBarrierWithPosts(postMaterial, railMaterial, true, false);  // Right inner
-    this.createCurvedBarrierWithPosts(postMaterial, railMaterial, false, true);  // Left outer
-    this.createCurvedBarrierWithPosts(postMaterial, railMaterial, false, false); // Left inner
+    this.createCurvedBarrierWithPosts(postMaterial, railMaterial, true, true, isCandyCane);   // Right outer
+    this.createCurvedBarrierWithPosts(postMaterial, railMaterial, true, false, isCandyCane);  // Right inner
+    this.createCurvedBarrierWithPosts(postMaterial, railMaterial, false, true, isCandyCane);  // Left outer
+    this.createCurvedBarrierWithPosts(postMaterial, railMaterial, false, false, isCandyCane); // Left inner
   }
 
   private createStraightBarrierWithPosts(
@@ -275,7 +330,8 @@ export class RaceTrack {
     railMaterial: THREE.Material,
     length: number,
     zPosition: number,
-    postSpacing: number
+    postSpacing: number,
+    isCandyCane: boolean
   ): void {
     const postRadius = 0.08;
     const postHeight = this.config.barrierHeight;
@@ -287,10 +343,11 @@ export class RaceTrack {
     const actualSpacing = length / (numPosts - 1);
 
     // Create posts
-    const postGeometry = new THREE.CylinderGeometry(postRadius, postRadius, postHeight, 8);
     for (let i = 0; i < numPosts; i++) {
       const x = -length / 2 + i * actualSpacing;
-      const post = new THREE.Mesh(postGeometry, postMaterial);
+      const post = isCandyCane
+        ? this.createCandyCanePost(postHeight)
+        : new THREE.Mesh(new THREE.CylinderGeometry(postRadius, postRadius, postHeight, 8), postMaterial);
       post.position.set(x, postHeight / 2, zPosition);
       post.castShadow = true;
       post.receiveShadow = true;
@@ -315,7 +372,8 @@ export class RaceTrack {
     postMaterial: THREE.Material,
     railMaterial: THREE.Material,
     isRight: boolean,
-    isOuter: boolean
+    isOuter: boolean,
+    isCandyCane: boolean
   ): void {
     const postRadius = 0.08;
     const postHeight = this.config.barrierHeight;
@@ -335,7 +393,6 @@ export class RaceTrack {
     const angleStep = (angleEnd - angleStart) / numPosts;
 
     // Create posts along the curve
-    const postGeometry = new THREE.CylinderGeometry(postRadius, postRadius, postHeight, 8);
     const postPositions: THREE.Vector3[] = [];
 
     for (let i = 0; i <= numPosts; i++) {
@@ -343,7 +400,9 @@ export class RaceTrack {
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
 
-      const post = new THREE.Mesh(postGeometry, postMaterial);
+      const post = isCandyCane
+        ? this.createCandyCanePost(postHeight)
+        : new THREE.Mesh(new THREE.CylinderGeometry(postRadius, postRadius, postHeight, 8), postMaterial);
       post.position.set(
         (isRight ? this.config.length / 2 : -this.config.length / 2) + x,
         postHeight / 2,
@@ -395,6 +454,14 @@ export class RaceTrack {
 
   public getConfig(): RaceTrackConfig {
     return { ...this.config };
+  }
+
+  public setRacers(horses: HorseData[]): void {
+    this.horses = horses;
+    // Remove any existing racer banners
+    this.group.children = this.group.children.filter(child => !(child as any).isRacerBanner);
+    // Create new banners
+    this.createRacerBanners();
   }
 
   public getStartingPositions(numPositions: number): THREE.Vector3[] {
@@ -476,5 +543,109 @@ export class RaceTrack {
       const z = Math.sin(angle) * laneRadius;
       return new THREE.Vector3(x, 0, z);
     }
+  }
+
+  private createRacerBanners(): void {
+    if (this.horses.length === 0) return;
+
+    const themeConfig = getThemeConfig(this.currentTheme);
+    const numBanners = this.horses.length;
+    const bannerSpacing = 8; // Space between banners
+    const totalWidth = (numBanners - 1) * bannerSpacing;
+    const startX = -totalWidth / 2; // Center the group
+
+    const poleHeight = 5;
+    const bannerWidth = 1.5;
+    const bannerHeight = 2.5;
+
+    for (let i = 0; i < numBanners; i++) {
+      const horse = this.horses[i];
+      const x = startX + i * bannerSpacing;
+      const z = this.config.radius - 2; // Inner edge of bottom straight (inside the track)
+
+      // Create pole (matches fence theme)
+      const pole = themeConfig.fenceType === 'candy-cane'
+        ? this.createCandyCanePost(poleHeight)
+        : new THREE.Mesh(
+          new THREE.CylinderGeometry(0.08, 0.08, poleHeight, 8),
+          new THREE.MeshStandardMaterial({ color: 0x8b4513, roughness: 0.7 })
+        );
+      pole.position.set(x, poleHeight / 2, z);
+      pole.castShadow = true;
+      (pole as any).isRacerBanner = true;
+      this.group.add(pole);
+
+      // Create finial (same color as racer)
+      const finial = new THREE.Mesh(
+        new THREE.SphereGeometry(0.15, 8, 8),
+        new THREE.MeshStandardMaterial({ color: horse.color, metalness: 0.3, roughness: 0.6 })
+      );
+      finial.position.set(x, poleHeight, z);
+      finial.castShadow = true;
+      (finial as any).isRacerBanner = true;
+      this.group.add(finial);
+
+      // Create banner fabric (medieval pointed style)
+      createBannerFabric(x, poleHeight - 0.5, z, bannerWidth, bannerHeight, horse, this.group);
+    }
+  }
+
+  private createCandyCanePost(height: number): THREE.Group {
+    const group = new THREE.Group();
+    const radius = 0.08;
+    const stripeHeight = 0.3;
+    const numStripes = Math.ceil(height / stripeHeight);
+
+    for (let i = 0; i < numStripes; i++) {
+      const isRed = i % 2 === 0;
+      const color = isRed ? 0xff0000 : 0xffffff;
+      const geometry = new THREE.CylinderGeometry(radius, radius, stripeHeight, 8);
+      const material = new THREE.MeshStandardMaterial({
+        color,
+        roughness: 0.4,
+        metalness: 0.1
+      });
+      const stripe = new THREE.Mesh(geometry, material);
+      stripe.position.y = (i - numStripes / 2) * stripeHeight + stripeHeight / 2;
+      stripe.castShadow = true;
+      stripe.receiveShadow = true;
+      group.add(stripe);
+    }
+
+    return group;
+  }
+
+  public setGround(ground: THREE.Mesh): void {
+    this.ground = ground;
+    this.updateGroundTexture();
+  }
+
+  private updateGroundTexture(): void {
+    if (!this.ground) return;
+    const themeConfig = getThemeConfig(this.currentTheme);
+
+    // Update ground color
+    (this.ground.material as THREE.MeshStandardMaterial).color.setHex(themeConfig.groundColor);
+
+    // Add texture pattern if needed
+    if (themeConfig.groundTexture === 'snow') {
+      // Could add snow texture here if desired
+    }
+  }
+
+  public updateTheme(newTheme: ThemeType): void {
+    this.currentTheme = newTheme;
+
+    // Clear and recreate all track elements with new theme
+    this.group.clear();
+    this.createTrack();
+    this.createBarriers();
+    this.createFinishLine();
+    this.createFinalStretchBanner();
+    this.createFinishBanner();
+    createDistantHills(this.group, this.config, this.currentTheme);
+    loadBleachers(this.group, this.config);
+    this.createRacerBanners(); // Recreate racer banners with new theme
+    this.updateGroundTexture();
   }
 }

@@ -1,8 +1,10 @@
 import { debugOverlayStyles, renderDebugContent } from './overlayTemplates';
+import { getCurrentTheme, saveTheme, getThemeConfig, type ThemeType } from './themeConfig';
 
 export class DebugOverlay {
   private overlayElement: HTMLDivElement;
   private isVisible: boolean = true;
+  private onThemeChange?: (theme: ThemeType) => void;
 
   constructor() {
     this.overlayElement = this.createOverlay();
@@ -17,9 +19,31 @@ export class DebugOverlay {
     // Apply styles
     overlay.style.cssText = debugOverlayStyles;
 
-    overlay.innerHTML = renderDebugContent();
+    this.updateOverlayContent(overlay);
 
     return overlay;
+  }
+
+  private updateOverlayContent(overlay: HTMLDivElement): void {
+    const currentTheme = getCurrentTheme();
+    overlay.innerHTML = renderDebugContent(currentTheme);
+
+    // Attach theme toggle event listener
+    const themeToggle = overlay.querySelector('#themeToggle');
+    if (themeToggle) {
+      themeToggle.addEventListener('click', () => {
+        const newTheme: ThemeType = getCurrentTheme() === 'normal' ? 'christmas' : 'normal';
+        saveTheme(newTheme);
+        this.updateOverlayContent(overlay);
+        if (this.onThemeChange) {
+          this.onThemeChange(newTheme);
+        }
+      });
+    }
+  }
+
+  public setThemeChangeCallback(callback: (theme: ThemeType) => void): void {
+    this.onThemeChange = callback;
   }
 
   public toggle(): void {

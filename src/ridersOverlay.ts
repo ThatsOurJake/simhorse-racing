@@ -117,7 +117,7 @@ export class RidersOverlay {
           font-family: Arial, sans-serif;
         ">
           <h1 style="margin: 0 0 20px 0; font-size: 32px; color: #4ecdc4;">
-            🎄 RIDERS ROSTER 🎄
+            RIDERS ROSTER
           </h1>
           <p style="font-size: 16px; color: #aaa; margin-bottom: 10px;">
             No horses in race.

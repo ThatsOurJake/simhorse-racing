@@ -10,6 +10,7 @@ import { RidersOverlay } from './ridersOverlay';
 import { PodiumScene } from './podiumScene';
 import { PhotoFinish } from './photoFinish';
 import type { HorseData } from './horseStats';
+import { getCurrentTheme, getThemeConfig, type ThemeType } from './themeConfig';
 
 // Screen state management
 const ScreenState = {
@@ -28,7 +29,9 @@ let wasLeaderboardOpen = true;
 
 // Scene setup
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87ceeb); // Sky blue background
+const currentTheme = getCurrentTheme();
+const themeConfig = getThemeConfig(currentTheme);
+scene.background = new THREE.Color(themeConfig.skyColor);
 
 // Camera setup
 const camera = new THREE.PerspectiveCamera(
@@ -61,9 +64,9 @@ directionalLight.shadow.camera.far = 500;
 scene.add(directionalLight);
 
 // Ground plane (grass around the track)
-const groundGeometry = new THREE.PlaneGeometry(150, 150);
+const groundGeometry = new THREE.PlaneGeometry(300, 300); // Much larger to hide edges
 const groundMaterial = new THREE.MeshStandardMaterial({
-  color: 0x228b22,
+  color: themeConfig.groundColor,
   roughness: 0.8,
   metalness: 0.2
 });
@@ -78,6 +81,7 @@ const raceTrack = new RaceTrack({
   width: 15,   // 25% wider
   radius: 20   // Larger curves
 });
+raceTrack.setGround(ground); // Pass ground reference for theme updates
 scene.add(raceTrack.getGroup());
 
 // Initialize race manager
@@ -88,6 +92,20 @@ const cameraController = new CameraController(camera, raceTrack.getConfig());
 
 // Initialize debug overlay
 const debugOverlay = new DebugOverlay();
+
+// Set up theme change callback
+debugOverlay.setThemeChangeCallback((newTheme: ThemeType) => {
+  const newConfig = getThemeConfig(newTheme);
+
+  // Update scene
+  scene.background = new THREE.Color(newConfig.skyColor);
+
+  // Update ground color
+  (ground.material as THREE.MeshStandardMaterial).color.setHex(newConfig.groundColor);
+
+  // Update track barriers
+  raceTrack.updateTheme(newTheme);
+});
 
 // Initialize leaderboard overlay
 const leaderboardOverlay = new LeaderboardOverlay();
@@ -105,11 +123,16 @@ const photoFinish = new PhotoFinish();
 const trackLength = raceManager.getTrackLength();
 const horseEditor = new HorseEditor(trackLength);
 
+// Set initial racer banners
+const initialHorses = raceManager.getHorses().map(h => h.data);
+raceTrack.setRacers(initialHorses);
+
 // Listen for horse changes
 horseEditor.onHorsesChange((horses: HorseData[]) => {
   const raceSeed = horseEditor.getRaceSeed();
   raceManager.setHorses(horses, raceSeed);
   raceManager.resetRace();
+  raceTrack.setRacers(horses); // Update racer banners on track
 });
 
 // Set up photo finish callback
@@ -266,6 +289,15 @@ window.addEventListener('keydown', (event) => {
   } else if (key === '-') {
     cameraController.setMode(CameraMode.FINISH_LINE);
     console.log('Camera: Finish Line View');
+  } else if (key === '=' || key === '+') {
+    if (cameraController.getCurrentMode() === CameraMode.BANNER) {
+      // Already in banner mode, cycle speed
+      cameraController.cycleBannerSpeed();
+    } else {
+      // Switch to banner mode
+      cameraController.setMode(CameraMode.BANNER);
+      console.log('Camera: Banner View (Slow)');
+    }
   } else if (key >= '1' && key <= '8') {
     const horseIndex = parseInt(key) - 1;
     if (horseIndex < horses.length) {
