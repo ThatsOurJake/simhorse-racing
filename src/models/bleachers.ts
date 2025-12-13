@@ -23,21 +23,24 @@ export function loadBleachers(group: THREE.Group, config: RaceTrackConfig): void
         const x = -config.length / 2 + spacing * i;
 
         // Top side bleachers (outer side of top straight)
-        const topBleacher = bleacherModel.clone();
-        topBleacher.position.set(
-          x,
-          0,
-          -(config.radius + config.width + 6)
-        );
-        topBleacher.rotation.y = 0; // Face the track
-        topBleacher.scale.set(3, 3, 3);
-        topBleacher.traverse((child) => {
-          if (child instanceof THREE.Mesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-          }
-        });
-        group.add(topBleacher);
+        // Skip indices 1 and 2 to make room for the big screen
+        if (i !== 1 && i !== 2) {
+          const topBleacher = bleacherModel.clone();
+          topBleacher.position.set(
+            x,
+            0,
+            -(config.radius + config.width + 6)
+          );
+          topBleacher.rotation.y = 0; // Face the track
+          topBleacher.scale.set(3, 3, 3);
+          topBleacher.traverse((child) => {
+            if (child instanceof THREE.Mesh) {
+              child.castShadow = true;
+              child.receiveShadow = true;
+            }
+          });
+          group.add(topBleacher);
+        }
 
         // Bottom side bleachers (outer side of bottom straight)
         const bottomBleacher = bleacherModel.clone();

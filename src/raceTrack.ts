@@ -4,6 +4,7 @@ import type { HorseData } from './horseStats';
 import { createBannerFabric } from './models/racerBanners';
 import { loadBleachers } from './models/bleachers';
 import { createDistantHills } from './models/distantHills';
+import { createBigScreen, type BigScreenSystem } from './models/bigScreen';
 
 export interface RaceTrackConfig {
   length: number;        // Length of straight sections
@@ -19,6 +20,7 @@ export class RaceTrack {
   private ground: THREE.Mesh | null = null;
   private currentTheme: ThemeType;
   private horses: HorseData[] = [];
+  private bigScreen: BigScreenSystem | null = null;
 
   constructor(config?: Partial<RaceTrackConfig>) {
     this.config = {
@@ -39,6 +41,12 @@ export class RaceTrack {
     this.createFinishBanner();
     createDistantHills(this.group, this.config, this.currentTheme);
     loadBleachers(this.group, this.config);
+  }
+
+  public initializeBigScreen(placeholderTexture: THREE.Texture): void {
+    // Create big screen system
+    this.bigScreen = createBigScreen(this.config, placeholderTexture);
+    this.group.add(this.bigScreen.group);
   }
 
   private createFinishLine(): void {
@@ -460,6 +468,10 @@ export class RaceTrack {
     return { ...this.config };
   }
 
+  public getBigScreen(): BigScreenSystem | null {
+    return this.bigScreen;
+  }
+
   public setRacers(horses: HorseData[]): void {
     this.horses = horses;
     // Remove any existing racer banners
@@ -640,6 +652,9 @@ export class RaceTrack {
   public updateTheme(newTheme: ThemeType): void {
     this.currentTheme = newTheme;
 
+    // Store placeholder texture if big screen exists
+    const placeholderTexture = this.bigScreen?.screenMaterial.map;
+
     // Clear and recreate all track elements with new theme
     this.group.clear();
     this.createTrack();
@@ -650,6 +665,12 @@ export class RaceTrack {
     createDistantHills(this.group, this.config, this.currentTheme);
     loadBleachers(this.group, this.config);
     this.createRacerBanners(); // Recreate racer banners with new theme
+
+    // Recreate big screen if it existed
+    if (placeholderTexture) {
+      this.initializeBigScreen(placeholderTexture);
+    }
+
     this.updateGroundTexture();
   }
 }

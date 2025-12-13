@@ -84,6 +84,34 @@ const raceTrack = new RaceTrack({
 raceTrack.setGround(ground); // Pass ground reference for theme updates
 scene.add(raceTrack.getGroup());
 
+// Load placeholder image for big screen
+const textureLoader = new THREE.TextureLoader();
+const placeholderTexture = textureLoader.load(
+  '/placeholder.jpeg',
+  (texture) => {
+    // Texture loaded successfully
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.repeat.x = -1; // Flip horizontally
+    texture.needsUpdate = true;
+
+    // Force update the screen material if big screen exists
+    const bigScreen = raceTrack.getBigScreen();
+    if (bigScreen) {
+      bigScreen.screenMaterial.map = texture;
+      bigScreen.screenMaterial.emissiveMap = texture;
+      bigScreen.screenMaterial.needsUpdate = true;
+    }
+  },
+  undefined,
+  (error) => {
+    console.error('Error loading placeholder texture:', error);
+  }
+);
+
+// Initialize big screen (texture will be applied when loaded)
+raceTrack.initializeBigScreen(placeholderTexture);
+
 // Initialize race manager
 const raceManager = new RaceManager(raceTrack);
 
@@ -373,6 +401,36 @@ function animate() {
     leaderboard.map(entry => entry.name),
     raceManager.isRacing() ? leaderboardHorseNames : horseNames
   );
+
+  // Update big screen follow camera and render to texture
+  const bigScreen = raceTrack.getBigScreen();
+  if (bigScreen) {
+    if (horses.length > 0) {
+      // Update the follow camera for the big screen
+      bigScreen.updateFollowCamera(
+        raceManager.isRacing() ? leaderboardPositions : horsePositions,
+        getTrackPosition,
+        leadHorseProgress
+      );
+
+      // Render the follow camera view to the render target
+      renderer.setRenderTarget(bigScreen.renderTarget);
+      renderer.render(scene, bigScreen.followCamera);
+      renderer.setRenderTarget(null); // Reset to default framebuffer
+
+      // Update screen material to show the rendered texture
+      bigScreen.screenMaterial.map = bigScreen.renderTarget.texture;
+      bigScreen.screenMaterial.emissiveMap = bigScreen.renderTarget.texture;
+      bigScreen.screenMaterial.needsUpdate = true;
+    } else {
+      // Show placeholder when no horses
+      if (bigScreen.screenMaterial.map !== placeholderTexture) {
+        bigScreen.screenMaterial.map = placeholderTexture;
+        bigScreen.screenMaterial.emissiveMap = placeholderTexture;
+        bigScreen.screenMaterial.needsUpdate = true;
+      }
+    }
+  }
 
   // Render appropriate scene based on current screen
   if (currentScreen === ScreenState.PODIUM) {
