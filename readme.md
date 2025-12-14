@@ -32,10 +32,6 @@ SimHorse Racing is a basic web-based horse racing simulator where small cubes, e
 | 1-8         | Individual Horse Cameras               |
 
 ## Horse Editor
-<video>
-  <source src="/assets/horse-editor.mp4" type="video/mp4">
-</video>
-
 The horse editor which can be access via the "E" key, when shown the UI will allow you to alter the racers of the current race as well as change the seed of the race to alter the outcome. These options can be exported as a JSON file and imported if you want to replay these races at a later date.
 
 ## Development
