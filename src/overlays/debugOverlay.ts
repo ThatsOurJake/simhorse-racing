@@ -1,5 +1,5 @@
+import { getCurrentTheme, saveTheme, type ThemeType } from "../themeConfig";
 import { debugOverlayStyles, renderDebugContent } from "./overlayTemplates";
-import { getCurrentTheme, saveTheme, type ThemeType } from "./themeConfig";
 
 export class DebugOverlay {
   private overlayElement: HTMLDivElement;

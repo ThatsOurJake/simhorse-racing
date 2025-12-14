@@ -47,7 +47,6 @@ export class CountdownOverlay {
       textElement.style.color = text === "GO" ? "#00ff00" : "#ffff00";
       textElement.style.textShadow =
         "0 0 20px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 0, 0, 0.5)";
-      textElement.style.fontFamily = "Arial, sans-serif";
       textElement.style.transition = "transform 0.5s ease-out";
       textElement.style.willChange = "transform";
 

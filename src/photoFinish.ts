@@ -4,7 +4,7 @@ import {
   photoFinishModalStyles,
   photoFinishThumbnailHTML,
   photoFinishThumbnailStyles,
-} from "./overlayTemplates";
+} from "./overlays/overlayTemplates";
 
 export class PhotoFinish {
   private capturedImageDataURL: string | null = null;

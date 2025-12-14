@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { FONT } from "./constants";
 import type { HorseData } from "./horseStats";
 import { type BigScreenSystem, createBigScreen } from "./models/bigScreen";
 import { loadBleachers } from "./models/bleachers";
@@ -217,7 +218,7 @@ export class RaceTrack {
     context.fillStyle = "#ff0000";
     context.fillRect(0, 0, canvas.width, canvas.height);
     context.fillStyle = "#ffffff";
-    context.font = "bold 72px Arial";
+    context.font = `bold 72px ${FONT}`;
     context.textAlign = "center";
     context.textBaseline = "middle";
     context.fillText("FINISH", canvas.width / 2, canvas.height / 2);

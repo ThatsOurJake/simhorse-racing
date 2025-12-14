@@ -10,6 +10,7 @@ export type HatType =
   | "top-hat"
   | "crown"
   | "propeller-hat";
+
 export type FaceType =
   | "happy"
   | "innocent"

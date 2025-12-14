@@ -5,7 +5,7 @@ import {
   type RiderData,
   renderRidersContent,
   ridersOverlayStyles,
-} from "./overlayTemplates";
+} from "./overlays/overlayTemplates";
 
 export class RidersOverlay {
   private overlayElement: HTMLDivElement;
@@ -123,7 +123,6 @@ export class RidersOverlay {
           max-width: 600px;
           text-align: center;
           box-sizing: border-box;
-          font-family: Arial, sans-serif;
         ">
           <h1 style="margin: 0 0 20px 0; font-size: 32px; color: #4ecdc4;">
             RIDERS ROSTER

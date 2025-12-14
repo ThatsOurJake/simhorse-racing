@@ -1,18 +1,18 @@
 import * as THREE from "three";
-import type { HatType, FaceType } from "./horseStats";
 import {
-  createHorseEars,
-  createReindeerAntlers,
-  createTopHat,
-  createCrown,
-  createPropellerHat,
+  applyAngryFaceTexture,
   applyHappyFaceTexture,
   applyInnocentEyesTexture,
-  applyAngryFaceTexture,
   applyShockedFaceTexture,
-  createRedNose,
+  createCrown,
   createGlasses,
+  createHorseEars,
+  createPropellerHat,
+  createRedNose,
+  createReindeerAntlers,
+  createTopHat,
 } from "./accessories";
+import type { FaceType, HatType } from "./horseStats";
 
 /**
  * Creates a hat mesh based on the hat type

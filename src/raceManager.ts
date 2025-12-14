@@ -1,8 +1,9 @@
 import * as THREE from "three";
-import { CountdownOverlay } from "./countdownOverlay";
+import { FONT } from "./constants";
 import { createFace, createHat } from "./horseAccessories";
 import type { HorseData, SpeedPoint } from "./horseStats";
 import { calculateSpeedCurve } from "./horseStats";
+import { CountdownOverlay } from "./overlays/countdownOverlay";
 import type { RaceTrack } from "./raceTrack";
 
 export const RaceState = {
@@ -144,7 +145,7 @@ export class RaceManager {
     const context = canvas.getContext("2d")!;
 
     // Set up text style first to measure
-    context.font = "bold 32px Arial";
+    context.font = `bold 32px ${FONT}`;
     const metrics = context.measureText(name);
     const textWidth = metrics.width;
     const padding = 20; // Padding on each side
@@ -154,7 +155,7 @@ export class RaceManager {
     canvas.height = 64;
 
     // Re-apply text style after resizing canvas
-    context.font = "bold 32px Arial";
+    context.font = `bold 32px ${FONT}`;
     context.textAlign = "center";
     context.textBaseline = "middle";
 

@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { FONT } from "../constants";
 import { createFace, createHat } from "../horseAccessories";
 import type { HorseData } from "../horseStats";
 import { getComplementaryColor } from "../utils/colorUtils";
@@ -105,7 +106,7 @@ export function createBannerFabric(
 
   // Draw name text in lower half (split into 2 lines if needed)
   context.fillStyle = "#000000";
-  context.font = "bold 32px Arial";
+  context.font = `bold 32px ${FONT}`;
   context.textAlign = "center";
   context.textBaseline = "middle";
 

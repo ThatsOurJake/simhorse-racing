@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { FONT } from "./constants";
 import type { Horse } from "./raceManager";
 
 interface Confetti {
@@ -89,7 +90,7 @@ export class PodiumScene {
       canvas.width = 256;
       canvas.height = 128;
       context.fillStyle = "#ffffff";
-      context.font = "bold 60px Arial";
+      context.font = `bold 60px ${FONT}`;
       context.textAlign = "center";
       context.textBaseline = "middle";
       context.fillText(data.label, 128, 64);
@@ -171,7 +172,7 @@ export class PodiumScene {
     const context = canvas.getContext("2d")!;
 
     // Set up text style first to measure
-    context.font = "bold 32px Arial";
+    context.font = `bold 32px ${FONT}`;
     const metrics = context.measureText(name);
     const textWidth = metrics.width;
     const padding = 20; // Padding on each side
@@ -181,7 +182,7 @@ export class PodiumScene {
     canvas.height = 64;
 
     // Re-apply text style after resizing canvas
-    context.font = "bold 32px Arial";
+    context.font = `bold 32px ${FONT}`;
     context.textAlign = "center";
     context.textBaseline = "middle";
 

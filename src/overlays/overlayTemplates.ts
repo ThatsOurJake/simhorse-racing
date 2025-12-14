@@ -94,7 +94,6 @@ export const photoFinishModalHTML = `
     <div style="
       text-align: center;
       color: #aaa;
-      font-family: 'Arial', sans-serif;
       font-size: 11px;
       margin-top: 8px;
     ">
@@ -243,7 +242,6 @@ export function renderRidersContent(riders: RiderData[]): string {
       max-height: 90vh;
       overflow-y: auto;
       box-sizing: border-box;
-      font-family: Arial, sans-serif;
     ">
       <h1 style="text-align: center; margin: 0 0 25px 0; font-size: 32px; color: #4ecdc4;">
         RIDERS ROSTER

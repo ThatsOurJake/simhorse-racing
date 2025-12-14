@@ -2,17 +2,18 @@ import * as THREE from "three";
 import "./style.css";
 import { CameraController, CameraMode } from "./cameraController";
 import { CameraIndicator } from "./cameraIndicator";
-import { DebugOverlay } from "./debugOverlay";
 import { FreeFlyCamera } from "./freeFlyCamera";
 import { HorseEditor } from "./horseEditor";
 import type { HorseData } from "./horseStats";
-import { LeaderboardOverlay } from "./leaderboardOverlay";
 import {
   isCrowdWaveActive,
   setRaceActive,
   startCrowdWave,
   updateSpectatorAnimations,
 } from "./models/bleachers";
+import { CreditsOverlay } from "./overlays/creditsOverlay";
+import { DebugOverlay } from "./overlays/debugOverlay";
+import { LeaderboardOverlay } from "./overlays/leaderboardOverlay";
 import { PhotoFinish } from "./photoFinish";
 import { PodiumScene } from "./podiumScene";
 import { RaceManager } from "./raceManager";
@@ -164,6 +165,8 @@ const podiumScene = new PodiumScene(camera);
 
 // Initialize photo finish system
 const photoFinish = new PhotoFinish();
+
+new CreditsOverlay();
 
 // Initialize horse editor
 const trackLength = raceManager.getTrackLength();
