@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import type { RaceTrackConfig } from '../raceTrack';
+import * as THREE from "three";
+import type { RaceTrackConfig } from "../raceTrack";
 
 export interface BigScreenSystem {
   group: THREE.Group;
@@ -9,7 +9,7 @@ export interface BigScreenSystem {
   updateFollowCamera: (
     horsePositions: THREE.Vector3[],
     getTrackPosition?: (progress: number, laneOffset?: number) => THREE.Vector3,
-    leadHorseProgress?: number
+    leadHorseProgress?: number,
   ) => void;
 }
 
@@ -21,7 +21,7 @@ export interface BigScreenSystem {
  */
 export function createBigScreen(
   config: RaceTrackConfig,
-  placeholderTexture: THREE.Texture
+  placeholderTexture: THREE.Texture,
 ): BigScreenSystem {
   const group = new THREE.Group();
 
@@ -55,7 +55,12 @@ export function createBigScreen(
   renderTarget.texture.repeat.x = -1;
 
   // Create follow camera for the screen feed
-  const followCamera = new THREE.PerspectiveCamera(75, screenAspectRatio, 0.1, 1000);
+  const followCamera = new THREE.PerspectiveCamera(
+    75,
+    screenAspectRatio,
+    0.1,
+    1000,
+  );
 
   // Camera offset configurations (same as main follow camera)
   const FOLLOW_CAM_HEIGHT = 5;
@@ -65,7 +70,7 @@ export function createBigScreen(
   const updateFollowCamera = (
     horsePositions: THREE.Vector3[],
     getTrackPosition?: (progress: number, laneOffset?: number) => THREE.Vector3,
-    leadHorseProgress?: number
+    leadHorseProgress?: number,
   ) => {
     if (horsePositions.length === 0) return;
 
@@ -76,7 +81,7 @@ export function createBigScreen(
       const cameraPosition = new THREE.Vector3(
         cameraTrackPos.x,
         FOLLOW_CAM_HEIGHT,
-        cameraTrackPos.z
+        cameraTrackPos.z,
       );
 
       followCamera.position.lerp(cameraPosition, 0.08);
@@ -88,7 +93,9 @@ export function createBigScreen(
       const leadHorse = horsePositions[0];
       const cameraPosition = new THREE.Vector3()
         .copy(leadHorse)
-        .add(new THREE.Vector3(FOLLOW_CAM_BEHIND_DISTANCE, FOLLOW_CAM_HEIGHT, 0));
+        .add(
+          new THREE.Vector3(FOLLOW_CAM_BEHIND_DISTANCE, FOLLOW_CAM_HEIGHT, 0),
+        );
 
       followCamera.position.lerp(cameraPosition, 0.08);
       followCamera.lookAt(leadHorse);
@@ -99,7 +106,7 @@ export function createBigScreen(
   const backPanelGeometry = new THREE.BoxGeometry(
     screenWidth + frameThickness * 2,
     totalHeight + frameThickness * 2,
-    depth
+    depth,
   );
   const backPanelMaterial = new THREE.MeshStandardMaterial({
     color: 0x1a1a1a,
@@ -128,7 +135,7 @@ export function createBigScreen(
   screen.position.set(
     positionX,
     positionY + speakerHeight / 2, // Move up by half speaker height
-    positionZ + depth / 2 + 0.01 // Slightly in front of back panel (toward camera)
+    positionZ + depth / 2 + 0.01, // Slightly in front of back panel (toward camera)
   );
   screen.rotation.y = Math.PI; // Face north (toward camera)
   group.add(screen);
@@ -142,13 +149,17 @@ export function createBigScreen(
 
   // Top bezel
   const topBezel = new THREE.Mesh(
-    new THREE.BoxGeometry(screenWidth + bezelWidth * 2, bezelWidth, depth * 0.8),
-    bezelMaterial
+    new THREE.BoxGeometry(
+      screenWidth + bezelWidth * 2,
+      bezelWidth,
+      depth * 0.8,
+    ),
+    bezelMaterial,
   );
   topBezel.position.set(
     positionX,
     positionY + speakerHeight / 2 + screenHeight / 2 + bezelWidth / 2,
-    positionZ + depth / 2 + 0.02
+    positionZ + depth / 2 + 0.02,
   );
   topBezel.rotation.y = Math.PI;
   topBezel.castShadow = true;
@@ -156,13 +167,17 @@ export function createBigScreen(
 
   // Bottom bezel (between screen and speaker)
   const bottomBezel = new THREE.Mesh(
-    new THREE.BoxGeometry(screenWidth + bezelWidth * 2, bezelWidth, depth * 0.8),
-    bezelMaterial
+    new THREE.BoxGeometry(
+      screenWidth + bezelWidth * 2,
+      bezelWidth,
+      depth * 0.8,
+    ),
+    bezelMaterial,
   );
   bottomBezel.position.set(
     positionX,
     positionY + speakerHeight / 2 - screenHeight / 2 - bezelWidth / 2,
-    positionZ + depth / 2 + 0.02
+    positionZ + depth / 2 + 0.02,
   );
   bottomBezel.rotation.y = Math.PI;
   bottomBezel.castShadow = true;
@@ -171,12 +186,12 @@ export function createBigScreen(
   // Left bezel
   const leftBezel = new THREE.Mesh(
     new THREE.BoxGeometry(bezelWidth, screenHeight, depth * 0.8),
-    bezelMaterial
+    bezelMaterial,
   );
   leftBezel.position.set(
     positionX - screenWidth / 2 - bezelWidth / 2,
     positionY + speakerHeight / 2,
-    positionZ + depth / 2 + 0.02
+    positionZ + depth / 2 + 0.02,
   );
   leftBezel.rotation.y = Math.PI;
   leftBezel.castShadow = true;
@@ -185,12 +200,12 @@ export function createBigScreen(
   // Right bezel
   const rightBezel = new THREE.Mesh(
     new THREE.BoxGeometry(bezelWidth, screenHeight, depth * 0.8),
-    bezelMaterial
+    bezelMaterial,
   );
   rightBezel.position.set(
     positionX + screenWidth / 2 + bezelWidth / 2,
     positionY + speakerHeight / 2,
-    positionZ + depth / 2 + 0.02
+    positionZ + depth / 2 + 0.02,
   );
   rightBezel.rotation.y = Math.PI;
   rightBezel.castShadow = true;
@@ -207,7 +222,7 @@ export function createBigScreen(
   speakerPanel.position.set(
     positionX,
     positionY - screenHeight / 2, // Position below screen
-    positionZ + depth / 2 + 0.01
+    positionZ + depth / 2 + 0.01,
   );
   speakerPanel.rotation.y = Math.PI;
   group.add(speakerPanel);
@@ -228,7 +243,12 @@ export function createBigScreen(
 
   for (let y = 0; y < numHexY; y++) {
     for (let x = 0; x < numHexX; x++) {
-      const hexGeometry = new THREE.CylinderGeometry(hexRadius, hexRadius, 0.1, 6);
+      const hexGeometry = new THREE.CylinderGeometry(
+        hexRadius,
+        hexRadius,
+        0.1,
+        6,
+      );
       const hex = new THREE.Mesh(hexGeometry, hexMaterial);
 
       // Offset every other row for hexagon packing
@@ -245,7 +265,7 @@ export function createBigScreen(
   hexagonGroup.position.set(
     positionX,
     positionY - screenHeight / 2,
-    positionZ + depth / 2 + 0.01
+    positionZ + depth / 2 + 0.01,
   );
   hexagonGroup.rotation.y = Math.PI;
   group.add(hexagonGroup);

@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 
 /**
  * Creates horse ears - two triangle cones on the sides
@@ -30,7 +30,7 @@ export function createReindeerAntlers(): THREE.Mesh[] {
   // Left antler
   const leftMain = new THREE.Mesh(
     new THREE.CylinderGeometry(0.04, 0.04, 0.6, 4),
-    antlerMaterial
+    antlerMaterial,
   );
   leftMain.position.set(-0.25, 0.3, 0);
   leftMain.rotation.z = Math.PI / 6;
@@ -39,7 +39,7 @@ export function createReindeerAntlers(): THREE.Mesh[] {
   // Left branches
   const leftBranch1 = new THREE.Mesh(
     new THREE.CylinderGeometry(0.03, 0.03, 0.25, 4),
-    antlerMaterial
+    antlerMaterial,
   );
   leftBranch1.position.set(-0.35, 0.45, 0);
   leftBranch1.rotation.z = Math.PI / 3;
@@ -47,7 +47,7 @@ export function createReindeerAntlers(): THREE.Mesh[] {
 
   const leftBranch2 = new THREE.Mesh(
     new THREE.CylinderGeometry(0.03, 0.03, 0.2, 4),
-    antlerMaterial
+    antlerMaterial,
   );
   leftBranch2.position.set(-0.3, 0.55, 0);
   leftBranch2.rotation.z = Math.PI / 4;
@@ -56,7 +56,7 @@ export function createReindeerAntlers(): THREE.Mesh[] {
   // Right antler (mirror of left)
   const rightMain = new THREE.Mesh(
     new THREE.CylinderGeometry(0.04, 0.04, 0.6, 4),
-    antlerMaterial
+    antlerMaterial,
   );
   rightMain.position.set(0.25, 0.3, 0);
   rightMain.rotation.z = -Math.PI / 6;
@@ -65,7 +65,7 @@ export function createReindeerAntlers(): THREE.Mesh[] {
   // Right branches
   const rightBranch1 = new THREE.Mesh(
     new THREE.CylinderGeometry(0.03, 0.03, 0.25, 4),
-    antlerMaterial
+    antlerMaterial,
   );
   rightBranch1.position.set(0.35, 0.45, 0);
   rightBranch1.rotation.z = -Math.PI / 3;
@@ -73,7 +73,7 @@ export function createReindeerAntlers(): THREE.Mesh[] {
 
   const rightBranch2 = new THREE.Mesh(
     new THREE.CylinderGeometry(0.03, 0.03, 0.2, 4),
-    antlerMaterial
+    antlerMaterial,
   );
   rightBranch2.position.set(0.3, 0.55, 0);
   rightBranch2.rotation.z = -Math.PI / 4;
@@ -91,14 +91,14 @@ export function createTopHat(): THREE.Mesh[] {
   // Hat body (tall cylinder)
   const hatBody = new THREE.Mesh(
     new THREE.CylinderGeometry(0.25, 0.25, 0.5, 8),
-    hatMaterial
+    hatMaterial,
   );
   hatBody.position.set(0, 0.25, 0);
 
   // Hat brim (flat disc)
   const brim = new THREE.Mesh(
     new THREE.CylinderGeometry(0.4, 0.4, 0.05, 8),
-    hatMaterial
+    hatMaterial,
   );
   brim.position.set(0, 0, 0);
 
@@ -114,7 +114,7 @@ export function createCrown(): THREE.Mesh[] {
   // Crown base (short cylinder)
   const base = new THREE.Mesh(
     new THREE.CylinderGeometry(0.35, 0.35, 0.15, 8),
-    crownMaterial
+    crownMaterial,
   );
   base.position.set(0, 0.075, 0);
 
@@ -129,7 +129,7 @@ export function createCrown(): THREE.Mesh[] {
     point.position.set(
       Math.cos(angle) * radius,
       0.25,
-      Math.sin(angle) * radius
+      Math.sin(angle) * radius,
     );
     points.push(point);
   }
@@ -148,7 +148,15 @@ export function createPropellerHat(): THREE.Mesh[] {
 
   // Create colorful segments using cones
   for (let i = 0; i < segmentCount; i++) {
-    const segmentGeometry = new THREE.ConeGeometry(0.35, 0.3, segmentCount, 1, false, i * anglePerSegment, anglePerSegment);
+    const segmentGeometry = new THREE.ConeGeometry(
+      0.35,
+      0.3,
+      segmentCount,
+      1,
+      false,
+      i * anglePerSegment,
+      anglePerSegment,
+    );
     const segmentMaterial = new THREE.MeshLambertMaterial({ color: colors[i] });
     const segment = new THREE.Mesh(segmentGeometry, segmentMaterial);
     segment.position.set(0, 0.15, 0);
@@ -159,20 +167,20 @@ export function createPropellerHat(): THREE.Mesh[] {
   const propellerMaterial = new THREE.MeshLambertMaterial({ color: 0x333333 });
   const blade1 = new THREE.Mesh(
     new THREE.BoxGeometry(0.5, 0.02, 0.08),
-    propellerMaterial
+    propellerMaterial,
   );
   blade1.position.set(0, 0.32, 0);
 
   const blade2 = new THREE.Mesh(
     new THREE.BoxGeometry(0.08, 0.02, 0.5),
-    propellerMaterial
+    propellerMaterial,
   );
   blade2.position.set(0, 0.32, 0);
 
   // Center knob
   const knob = new THREE.Mesh(
     new THREE.SphereGeometry(0.05, 6, 6),
-    propellerMaterial
+    propellerMaterial,
   );
   knob.position.set(0, 0.35, 0);
 

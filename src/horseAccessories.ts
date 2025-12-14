@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import type { HatType, FaceType } from './horseStats';
+import * as THREE from "three";
+import type { HatType, FaceType } from "./horseStats";
 import {
   createHorseEars,
   createReindeerAntlers,
@@ -12,7 +12,7 @@ import {
   applyShockedFaceTexture,
   createRedNose,
   createGlasses,
-} from './accessories';
+} from "./accessories";
 
 /**
  * Creates a hat mesh based on the hat type
@@ -21,19 +21,19 @@ export function createHat(type: HatType, horseColor: number): THREE.Group {
   const hatGroup = new THREE.Group();
 
   switch (type) {
-    case 'horse-ears':
+    case "horse-ears":
       hatGroup.add(...createHorseEars(horseColor));
       break;
-    case 'reindeer-antlers':
+    case "reindeer-antlers":
       hatGroup.add(...createReindeerAntlers());
       break;
-    case 'top-hat':
+    case "top-hat":
       hatGroup.add(...createTopHat());
       break;
-    case 'crown':
+    case "crown":
       hatGroup.add(...createCrown());
       break;
-    case 'propeller-hat':
+    case "propeller-hat":
       hatGroup.add(...createPropellerHat());
       break;
   }
@@ -49,27 +49,30 @@ export function createHat(type: HatType, horseColor: number): THREE.Group {
  * For canvas-based faces, this creates a texture applied to the front of the cube
  * For 3D faces (like red nose), this creates mesh objects
  */
-export function createFace(type: FaceType, horseMesh: THREE.Mesh): THREE.Object3D[] {
+export function createFace(
+  type: FaceType,
+  horseMesh: THREE.Mesh,
+): THREE.Object3D[] {
   const accessories: THREE.Object3D[] = [];
 
   switch (type) {
-    case 'happy':
+    case "happy":
       applyHappyFaceTexture(horseMesh);
       break;
-    case 'innocent':
+    case "innocent":
       applyInnocentEyesTexture(horseMesh);
       break;
-    case 'red-nose':
+    case "red-nose":
       applyInnocentEyesTexture(horseMesh); // Eyes for context
       accessories.push(createRedNose());
       break;
-    case 'angry':
+    case "angry":
       applyAngryFaceTexture(horseMesh);
       break;
-    case 'shocked':
+    case "shocked":
       applyShockedFaceTexture(horseMesh);
       break;
-    case 'glasses':
+    case "glasses":
       applyInnocentEyesTexture(horseMesh); // Eyes for context
       accessories.push(createGlasses());
       break;

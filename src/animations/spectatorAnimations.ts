@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import type * as THREE from "three";
 
 export interface AnimatedSpectator {
   group: THREE.Group;
@@ -52,11 +52,13 @@ export class SpectatorAnimationController {
     const time = this.elapsedTime + spectator.phaseOffset;
 
     // Head bobbing (left-right looking)
-    const bobAngle = Math.sin(time * spectator.bobSpeed) * this.HEAD_BOB_ANGLE_CALM;
+    const bobAngle =
+      Math.sin(time * spectator.bobSpeed) * this.HEAD_BOB_ANGLE_CALM;
     spectator.topCube.rotation.y = bobAngle;
 
     // Body swaying (gentle side-to-side)
-    const swayAngle = Math.sin(time * spectator.swaySpeed) * this.BODY_SWAY_ANGLE;
+    const swayAngle =
+      Math.sin(time * spectator.swaySpeed) * this.BODY_SWAY_ANGLE;
     spectator.group.rotation.z = swayAngle;
 
     // Reset any jump offset from excited state
@@ -70,11 +72,13 @@ export class SpectatorAnimationController {
     const time = this.elapsedTime + spectator.phaseOffset;
 
     // Faster head bobbing
-    const bobAngle = Math.sin(time * spectator.bobSpeed * 2) * this.HEAD_BOB_ANGLE_EXCITED;
+    const bobAngle =
+      Math.sin(time * spectator.bobSpeed * 2) * this.HEAD_BOB_ANGLE_EXCITED;
     spectator.topCube.rotation.y = bobAngle;
 
     // Jumping (vertical bounce)
-    const jumpOffset = Math.abs(Math.sin(time * spectator.jumpSpeed)) * this.JUMP_HEIGHT;
+    const jumpOffset =
+      Math.abs(Math.sin(time * spectator.jumpSpeed)) * this.JUMP_HEIGHT;
     const previousJumpOffset = spectator.group.userData.jumpOffset || 0;
     spectator.group.position.y += jumpOffset - previousJumpOffset;
     spectator.group.userData.jumpOffset = jumpOffset;

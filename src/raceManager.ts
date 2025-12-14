@@ -1,18 +1,18 @@
-import * as THREE from 'three';
-import { CountdownOverlay } from './countdownOverlay';
-import { RaceTrack } from './raceTrack';
-import { calculateSpeedCurve } from './horseStats';
-import { createHat, createFace } from './horseAccessories';
-import type { HorseData, SpeedPoint } from './horseStats';
+import * as THREE from "three";
+import { CountdownOverlay } from "./countdownOverlay";
+import { createFace, createHat } from "./horseAccessories";
+import type { HorseData, SpeedPoint } from "./horseStats";
+import { calculateSpeedCurve } from "./horseStats";
+import type { RaceTrack } from "./raceTrack";
 
 export const RaceState = {
-  IDLE: 'idle',
-  COUNTDOWN: 'countdown',
-  RACING: 'racing',
-  FINISHED: 'finished'
+  IDLE: "idle",
+  COUNTDOWN: "countdown",
+  RACING: "racing",
+  FINISHED: "finished",
 } as const;
 
-export type RaceState = typeof RaceState[keyof typeof RaceState];
+export type RaceState = (typeof RaceState)[keyof typeof RaceState];
 
 export interface Horse {
   mesh: THREE.Mesh;
@@ -56,8 +56,10 @@ export class RaceManager {
       if (horse.mesh.parent) {
         horse.mesh.parent.remove(horse.mesh);
         // Also remove name label if it exists
-        if (horse.mesh.userData.nameLabel && horse.mesh.userData.nameLabel.parent) {
-          horse.mesh.userData.nameLabel.parent.remove(horse.mesh.userData.nameLabel);
+        if (horse.mesh.userData.nameLabel?.parent) {
+          horse.mesh.userData.nameLabel.parent.remove(
+            horse.mesh.userData.nameLabel,
+          );
         }
       }
     });
@@ -78,7 +80,9 @@ export class RaceManager {
 
       // Create cube for horse
       const geometry = new THREE.BoxGeometry(1, 1, 1);
-      const material = new THREE.MeshLambertMaterial({ color: horseData.color });
+      const material = new THREE.MeshLambertMaterial({
+        color: horseData.color,
+      });
       const mesh = new THREE.Mesh(geometry, material);
 
       // Rotate horse 90 degrees right so front faces forward along track
@@ -90,14 +94,17 @@ export class RaceManager {
 
       // Add face accessory
       const faceAccessories = createFace(horseData.face, mesh);
-      faceAccessories.forEach(accessory => mesh.add(accessory));
+      faceAccessories.forEach((accessory) => {
+        mesh.add(accessory);
+      });
 
       // Create name label using canvas texture
       const nameLabel = this.createNameLabel(horseData.name);
       mesh.userData.nameLabel = nameLabel;
 
       // Generate final kick using race seed
-      const finalKick = this.seededRandom(this.raceSeed + index * 7) * 0.4 + 0.8; // 0.8-1.2
+      const finalKick =
+        this.seededRandom(this.raceSeed + index * 7) * 0.4 + 0.8; // 0.8-1.2
 
       this.horses.push({
         mesh,
@@ -133,11 +140,11 @@ export class RaceManager {
 
   private createNameLabel(name: string): THREE.Sprite {
     // Create canvas for text
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d')!;
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d")!;
 
     // Set up text style first to measure
-    context.font = 'bold 32px Arial';
+    context.font = "bold 32px Arial";
     const metrics = context.measureText(name);
     const textWidth = metrics.width;
     const padding = 20; // Padding on each side
@@ -147,16 +154,16 @@ export class RaceManager {
     canvas.height = 64;
 
     // Re-apply text style after resizing canvas
-    context.font = 'bold 32px Arial';
-    context.textAlign = 'center';
-    context.textBaseline = 'middle';
+    context.font = "bold 32px Arial";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
 
     // Draw background
-    context.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    context.fillStyle = "rgba(0, 0, 0, 0.7)";
     context.fillRect(0, 0, canvas.width, canvas.height);
 
     // Draw text
-    context.fillStyle = '#ffffff';
+    context.fillStyle = "#ffffff";
     context.fillText(name, canvas.width / 2, canvas.height / 2);
 
     // Create sprite from canvas texture
@@ -182,7 +189,7 @@ export class RaceManager {
 
     // Start countdown
     this.state = RaceState.COUNTDOWN;
-    await this.countdownOverlay.showCountdown(['3', '2', '1', 'GO']);
+    await this.countdownOverlay.showCountdown(["3", "2", "1", "GO"]);
 
     // Start racing
     this.state = RaceState.RACING;
@@ -225,7 +232,6 @@ export class RaceManager {
     }
 
     let allFinished = true;
-    let allStopped = true; // Track if all horses have completely stopped moving
 
     // Check for photo finish trigger (when leader crosses the finish line)
     if (!this.photoFinishCaptured && this.state === RaceState.RACING) {
@@ -243,18 +249,25 @@ export class RaceManager {
     this.horses.forEach((horse, horseIndex) => {
       if (!horse.hasFinished) {
         // Get base speed from speed curve
-        const baseSpeed = this.getSpeedAtDistance(horse.speedCurve, horse.progress);
+        const baseSpeed = this.getSpeedAtDistance(
+          horse.speedCurve,
+          horse.progress,
+        );
 
         // Update variance timer
         horse.varianceTimer -= deltaTime;
         if (horse.varianceTimer <= 0) {
           // Time to change variance - happens every 1-3 seconds
-          horse.varianceTimer = 1 + this.seededRandom(this.raceSeed + horseIndex + horse.progress) * 2;
+          horse.varianceTimer =
+            1 +
+            this.seededRandom(this.raceSeed + horseIndex + horse.progress) * 2;
 
           // Calculate new variance based on stamina (high stamina = more consistent)
           const staminaConsistency = horse.data.stats.stamina;
           const varianceRange = 0.15 * (1 - staminaConsistency * 0.5); // 0.075-0.15 range
-          const randomFactor = this.seededRandom(this.raceSeed + horseIndex + horse.progress + 1000);
+          const randomFactor = this.seededRandom(
+            this.raceSeed + horseIndex + horse.progress + 1000,
+          );
           horse.speedVariance = 1.0 + (randomFactor - 0.5) * 2 * varianceRange;
         }
 
@@ -265,7 +278,8 @@ export class RaceManager {
         const progressRatio = horse.progress / this.trackLength;
         if (progressRatio > 0.85) {
           // Apply final kick modifier
-          const finalStretchBoost = 1.0 + (horse.finalKick - 1.0) * ((progressRatio - 0.85) / 0.15);
+          const finalStretchBoost =
+            1.0 + (horse.finalKick - 1.0) * ((progressRatio - 0.85) / 0.15);
           finalSpeed *= finalStretchBoost;
         }
 
@@ -278,7 +292,7 @@ export class RaceManager {
         if (distancePastFinish < this.DECELERATION_DISTANCE) {
           // Use ease-out curve for smooth deceleration (quadratic ease-out for gentler slowdown)
           const t = distancePastFinish / this.DECELERATION_DISTANCE;
-          const easeOut = 1 - Math.pow(1 - t, 2); // Quadratic ease-out (gentler than cubic)
+          const easeOut = 1 - (1 - t) ** 2; // Quadratic ease-out (gentler than cubic)
 
           // Interpolate from finish speed to 0
           horse.currentSpeed = horse.finishSpeed * (1 - easeOut);
@@ -303,13 +317,11 @@ export class RaceManager {
         allFinished = false;
       }
 
-      // Track if all horses have completely stopped moving
-      if (horse.currentSpeed > 0.01) {
-        allStopped = false;
-      }
-
       // Update horse position based on progress and lane
-      const position = this.raceTrack.getTrackPosition(horse.progress, horse.laneOffset);
+      const position = this.raceTrack.getTrackPosition(
+        horse.progress,
+        horse.laneOffset,
+      );
       horse.mesh.position.x = position.x;
       horse.mesh.position.y = position.y + 0.5; // Keep horse above ground
       horse.mesh.position.z = position.z;
@@ -317,8 +329,13 @@ export class RaceManager {
       // Calculate forward direction for rotation
       // Sample a point slightly ahead to determine facing direction
       const lookAheadDistance = 0.1; // Small distance ahead
-      const futurePosition = this.raceTrack.getTrackPosition(horse.progress + lookAheadDistance, horse.laneOffset);
-      const direction = new THREE.Vector3().subVectors(futurePosition, position).normalize();
+      const futurePosition = this.raceTrack.getTrackPosition(
+        horse.progress + lookAheadDistance,
+        horse.laneOffset,
+      );
+      const direction = new THREE.Vector3()
+        .subVectors(futurePosition, position)
+        .normalize();
 
       // Calculate rotation to face the direction of travel
       // atan2 gives us the angle in the XZ plane
@@ -337,20 +354,27 @@ export class RaceManager {
     // Check if race should transition to finished (all crossed line)
     if (allFinished && this.state === RaceState.RACING) {
       this.state = RaceState.FINISHED;
-      console.log('Race finished!');
-      this.printRaceResults();
     }
   }
 
-  private getSpeedAtDistance(speedCurve: SpeedPoint[], distance: number): number {
+  private getSpeedAtDistance(
+    speedCurve: SpeedPoint[],
+    distance: number,
+  ): number {
     // Find the two points that bracket the current distance
     for (let i = 0; i < speedCurve.length - 1; i++) {
-      if (distance >= speedCurve[i].distance && distance <= speedCurve[i + 1].distance) {
+      if (
+        distance >= speedCurve[i].distance &&
+        distance <= speedCurve[i + 1].distance
+      ) {
         // Linear interpolation between the two points
         const t =
           (distance - speedCurve[i].distance) /
           (speedCurve[i + 1].distance - speedCurve[i].distance);
-        return speedCurve[i].speed + (speedCurve[i + 1].speed - speedCurve[i].speed) * t;
+        return (
+          speedCurve[i].speed +
+          (speedCurve[i + 1].speed - speedCurve[i].speed) * t
+        );
       }
     }
 
@@ -358,25 +382,14 @@ export class RaceManager {
     return speedCurve[speedCurve.length - 1].speed;
   }
 
-  private printRaceResults(): void {
-    // Sort horses by finish time (those who finished first have earliest finish)
-    const results = [...this.horses]
-      .map((horse, index) => ({ horse, originalIndex: index }));
-
-    console.log('=== Race Results ===');
-    results.forEach((result, place) => {
-      console.log(
-        `${place + 1}. ${result.horse.data.name} (Lane ${result.originalIndex + 1})`
-      );
-    });
-  }
-
   public getState(): RaceState {
     return this.state;
   }
 
   public isRacing(): boolean {
-    return this.state === RaceState.RACING || this.state === RaceState.COUNTDOWN;
+    return (
+      this.state === RaceState.RACING || this.state === RaceState.COUNTDOWN
+    );
   }
 
   public resetRace(): void {
@@ -417,7 +430,11 @@ export class RaceManager {
     return this.raceTime;
   }
 
-  public getLeaderboard(): { position: number; name: string; progress: number }[] {
+  public getLeaderboard(): {
+    position: number;
+    name: string;
+    progress: number;
+  }[] {
     // Sort horses: finished horses by finish time (ascending), then unfinished by progress (descending)
     const sorted = [...this.horses]
       .map((horse) => ({

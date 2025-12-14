@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 import {
   applyHappyFaceTexture,
   applyInnocentEyesTexture,
@@ -6,7 +6,7 @@ import {
   applyShockedFaceTexture,
   createRedNose,
   createGlasses,
-} from '../accessories';
+} from "../accessories";
 
 /**
  * Creates a spectator model - a cuboid with random color, hat, and face
@@ -21,9 +21,9 @@ export function createSpectator(): {
 
   // Random color for the spectator body
   const colors = [
-    0xff6b6b, 0x4ecdc4, 0x45b7d1, 0xf9ca24, 0xf0932b,
-    0xeb4d4b, 0x6c5ce7, 0xa29bfe, 0xfd79a8, 0xe17055,
-    0x00b894, 0x00cec9, 0x0984e3, 0x6c5ce7, 0xfdcb6e
+    0xff6b6b, 0x4ecdc4, 0x45b7d1, 0xf9ca24, 0xf0932b, 0xeb4d4b, 0x6c5ce7,
+    0xa29bfe, 0xfd79a8, 0xe17055, 0x00b894, 0x00cec9, 0x0984e3, 0x6c5ce7,
+    0xfdcb6e,
   ];
   const color = colors[Math.floor(Math.random() * colors.length)];
 
@@ -73,7 +73,7 @@ export function createSpectator(): {
     const glasses = createGlasses(1.0); // Use default positioning
     // First, move all children to be centered at origin (subtract their existing Z offset)
     const originalZ = 0.52; // The original Z position from createGlasses for 1.0 cube
-    glasses.children.forEach(child => {
+    glasses.children.forEach((child) => {
       child.position.z -= originalZ;
     });
     // Now scale and position as a unit
@@ -85,6 +85,6 @@ export function createSpectator(): {
   return {
     group: spectatorGroup,
     topCube: topMesh,
-    bottomCube: bottomMesh
+    bottomCube: bottomMesh,
   };
 }

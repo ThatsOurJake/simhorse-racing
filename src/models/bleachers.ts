@@ -1,9 +1,12 @@
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import type { RaceTrackConfig } from '../raceTrack';
-import { createSpectator } from './spectator';
-import { SpectatorAnimationController, type AnimatedSpectator } from '../animations/spectatorAnimations';
-import { CrowdWaveController } from '../animations/crowdWave';
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { CrowdWaveController } from "../animations/crowdWave";
+import {
+  type AnimatedSpectator,
+  SpectatorAnimationController,
+} from "../animations/spectatorAnimations";
+import type { RaceTrackConfig } from "../raceTrack";
+import { createSpectator } from "./spectator";
 
 // Global animation controller for all bleacher spectators
 const animationController = new SpectatorAnimationController();
@@ -17,11 +20,14 @@ const ANIMATION_PROBABILITY = 0.6;
  * @param bleacher - The bleacher object to add spectators to
  * @param bleacherIndex - Index for wave ordering
  */
-function addSpectatorsToBlacher(bleacher: THREE.Object3D, bleacherIndex: number): void {
+function addSpectatorsToBlacher(
+  bleacher: THREE.Object3D,
+  bleacherIndex: number,
+): void {
   // Find the Seat_0 object specifically
   let seatObject: THREE.Object3D | undefined;
   bleacher.traverse((child) => {
-    if (child.name === 'Seat_0') {
+    if (child.name === "Seat_0") {
       seatObject = child as THREE.Object3D;
     }
   });
@@ -34,10 +40,10 @@ function addSpectatorsToBlacher(bleacher: THREE.Object3D, bleacherIndex: number)
   // These are relative to the Seat_0 object's local coordinates
   // Platforms step back as they go up
   const platforms = [
-    { y: -0.6, z: 0.63 },   // Bottom platform
-    { y: -0.2, z: 0.25 },   // Second platform
-    { y: 0.2, z: -0.13 },   // Third platform
-    { y: 0.6, z: -0.51 }    // Top platform
+    { y: -0.6, z: 0.63 }, // Bottom platform
+    { y: -0.2, z: 0.25 }, // Second platform
+    { y: 0.2, z: -0.13 }, // Third platform
+    { y: 0.6, z: -0.51 }, // Top platform
   ];
 
   const spectatorWidth = 0.3; // Width of spectator body
@@ -66,7 +72,7 @@ function addSpectatorsToBlacher(bleacher: THREE.Object3D, bleacherIndex: number)
         attempts++;
       } while (
         attempts < maxAttempts &&
-        usedPositions.some(pos => Math.abs(pos - xPos) < minSpacing)
+        usedPositions.some((pos) => Math.abs(pos - xPos) < minSpacing)
       );
 
       // If we found a valid position, create the spectator
@@ -81,7 +87,7 @@ function addSpectatorsToBlacher(bleacher: THREE.Object3D, bleacherIndex: number)
         seatObject.add(spectator);
 
         // Add to wave controller with normalized position for right-to-left ripple
-        const normalizedX = 1 - ((xPos - xMin) / xRange); // 1.0 (right) to 0.0 (left)
+        const normalizedX = 1 - (xPos - xMin) / xRange; // 1.0 (right) to 0.0 (left)
         waveController.addSpectator({
           group: spectator,
           topCube: spectatorData.topCube,
@@ -111,14 +117,14 @@ function addSpectatorsToBlacher(bleacher: THREE.Object3D, bleacherIndex: number)
 }
 
 export function loadBleachers(
-  scene: THREE.Scene,
-  config: RaceTrackConfig
+  scene: THREE.Scene | THREE.Group<THREE.Object3DEventMap>,
+  config: RaceTrackConfig,
 ): THREE.Group {
   const group = new THREE.Group();
   const loader = new GLTFLoader();
 
   loader.load(
-    '/bleacher.glb',
+    "/bleacher.glb",
     (gltf) => {
       // Successfully loaded the model
       const bleacherModel = gltf.scene;
@@ -141,11 +147,7 @@ export function loadBleachers(
         // Skip indices 1 and 2 to make room for the big screen
         if (i !== 1 && i !== 2) {
           const topBleacher = bleacherModel.clone();
-          topBleacher.position.set(
-            x,
-            0,
-            -(config.radius + config.width + 6)
-          );
+          topBleacher.position.set(x, 0, -(config.radius + config.width + 6));
           topBleacher.rotation.y = 0; // Face the track
           topBleacher.scale.set(3, 3, 3);
           topBleacher.traverse((child) => {
@@ -163,11 +165,7 @@ export function loadBleachers(
 
         // Bottom side bleachers (outer side of bottom straight)
         const bottomBleacher = bleacherModel.clone();
-        bottomBleacher.position.set(
-          x,
-          0,
-          config.radius + config.width + 6
-        );
+        bottomBleacher.position.set(x, 0, config.radius + config.width + 6);
         bottomBleacher.rotation.y = Math.PI; // Face the track (opposite direction)
         bottomBleacher.scale.set(3, 3, 3);
         bottomBleacher.traverse((child) => {
@@ -191,7 +189,8 @@ export function loadBleachers(
       // Right curve (from bottom straight to top straight)
       const rightCurveStart = -Math.PI / 2;
       const rightCurveEnd = Math.PI / 2;
-      const rightAngleStep = (rightCurveEnd - rightCurveStart) / (numCurveBleachers + 1);
+      const rightAngleStep =
+        (rightCurveEnd - rightCurveStart) / (numCurveBleachers + 1);
 
       for (let i = 0; i < numCurveBleachers; i++) {
         const angle = rightCurveStart + rightAngleStep * (i + 1);
@@ -218,7 +217,8 @@ export function loadBleachers(
       // Left curve (from top straight to bottom straight)
       const leftCurveStart = Math.PI / 2;
       const leftCurveEnd = Math.PI * 1.5;
-      const leftAngleStep = (leftCurveEnd - leftCurveStart) / (numCurveBleachers + 1);
+      const leftAngleStep =
+        (leftCurveEnd - leftCurveStart) / (numCurveBleachers + 1);
 
       for (let i = 0; i < numCurveBleachers; i++) {
         const angle = leftCurveStart + leftAngleStep * (i + 1);
@@ -245,32 +245,31 @@ export function loadBleachers(
       // Set up wave order: Clockwise around track starting from top-left
       // top-left (0) -> left curve (13-10) -> bottom (1,2,3,5) -> right curve (9-6) -> top-right (4)
       const waveOrder = [
-        0,  // top-left
+        0, // top-left
         13, // left curve (reversed)
         12, // left curve
         11, // left curve
         10, // left curve
-        1,  // bottom-left
-        2,  // bottom
-        3,  // bottom
-        5,  // bottom-right
-        9,  // right curve (reversed)
-        8,  // right curve
-        7,  // right curve
-        6,  // right curve
-        4,  // top-right
+        1, // bottom-left
+        2, // bottom
+        3, // bottom
+        5, // bottom-right
+        9, // right curve (reversed)
+        8, // right curve
+        7, // right curve
+        6, // right curve
+        4, // top-right
       ];
 
       waveController.setBleacherWaveOrder(waveOrder);
-      console.log('Wave order set:', waveOrder);
 
       // Add the group to the scene after all bleachers are set up
       scene.add(group);
     },
     undefined,
     (error) => {
-      console.error('Error loading bleacher model:', error);
-    }
+      console.error("Error loading bleacher model:", error);
+    },
   );
 
   return group;

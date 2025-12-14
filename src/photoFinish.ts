@@ -1,10 +1,10 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 import {
-  photoFinishThumbnailStyles,
-  photoFinishThumbnailHTML,
-  photoFinishModalStyles,
   photoFinishModalHTML,
-} from './overlayTemplates';
+  photoFinishModalStyles,
+  photoFinishThumbnailHTML,
+  photoFinishThumbnailStyles,
+} from "./overlayTemplates";
 
 export class PhotoFinish {
   private capturedImageDataURL: string | null = null;
@@ -22,14 +22,17 @@ export class PhotoFinish {
   public capture(
     scene: THREE.Scene,
     renderer: THREE.WebGLRenderer,
-    getFinishLineCameraView: () => { position: THREE.Vector3; lookAt: THREE.Vector3 }
+    getFinishLineCameraView: () => {
+      position: THREE.Vector3;
+      lookAt: THREE.Vector3;
+    },
   ): void {
     // Create a temporary camera for the finish line view
     const tempCamera = new THREE.PerspectiveCamera(
       75,
       window.innerWidth / window.innerHeight,
       0.1,
-      1000
+      1000,
     );
 
     // Hide finish banner from photo finish (layer 1)
@@ -40,48 +43,42 @@ export class PhotoFinish {
     tempCamera.position.copy(finishView.position);
     tempCamera.lookAt(finishView.lookAt);
 
-    // Store current size
-    const currentWidth = renderer.domElement.width;
-    const currentHeight = renderer.domElement.height;
-
     // Render the scene from finish line camera
     renderer.render(scene, tempCamera);
 
     // Capture the canvas as an image
-    this.capturedImageDataURL = renderer.domElement.toDataURL('image/png');
+    this.capturedImageDataURL = renderer.domElement.toDataURL("image/png");
 
     // Update thumbnail if it exists
     if (this.thumbnailElement) {
       this.updateThumbnail();
     }
-
-    console.log('Photo finish captured!');
   }
 
   private createThumbnail(): void {
-    this.thumbnailElement = document.createElement('div');
-    this.thumbnailElement.id = 'photo-finish-thumbnail';
+    this.thumbnailElement = document.createElement("div");
+    this.thumbnailElement.id = "photo-finish-thumbnail";
     this.thumbnailElement.style.cssText = photoFinishThumbnailStyles;
     this.thumbnailElement.innerHTML = photoFinishThumbnailHTML;
 
-    this.thumbnailElement.addEventListener('mouseenter', () => {
+    this.thumbnailElement.addEventListener("mouseenter", () => {
       if (this.thumbnailElement) {
-        this.thumbnailElement.style.transform = 'scale(1.05)';
+        this.thumbnailElement.style.transform = "scale(1.05)";
       }
     });
 
-    this.thumbnailElement.addEventListener('mouseleave', () => {
+    this.thumbnailElement.addEventListener("mouseleave", () => {
       if (this.thumbnailElement) {
-        this.thumbnailElement.style.transform = 'scale(1)';
+        this.thumbnailElement.style.transform = "scale(1)";
       }
     });
 
-    this.thumbnailElement.addEventListener('click', () => {
+    this.thumbnailElement.addEventListener("click", () => {
       this.showModal();
     });
 
     // Add context menu handler for saving
-    this.thumbnailElement.addEventListener('contextmenu', (e) => {
+    this.thumbnailElement.addEventListener("contextmenu", (e) => {
       e.preventDefault();
       this.downloadImage();
     });
@@ -90,19 +87,19 @@ export class PhotoFinish {
   }
 
   private createModal(): void {
-    this.modalElement = document.createElement('div');
-    this.modalElement.id = 'photo-finish-modal';
+    this.modalElement = document.createElement("div");
+    this.modalElement.id = "photo-finish-modal";
     this.modalElement.style.cssText = photoFinishModalStyles;
     this.modalElement.innerHTML = photoFinishModalHTML;
 
-    this.modalElement.addEventListener('click', (e) => {
+    this.modalElement.addEventListener("click", (e) => {
       if (e.target === this.modalElement) {
         this.hideModal();
       }
     });
 
     // Add context menu handler for saving in modal
-    this.modalElement.addEventListener('contextmenu', (e) => {
+    this.modalElement.addEventListener("contextmenu", (e) => {
       e.preventDefault();
       this.downloadImage();
     });
@@ -110,8 +107,8 @@ export class PhotoFinish {
     document.body.appendChild(this.modalElement);
 
     // Handle ESC key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.modalElement?.style.display === 'flex') {
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && this.modalElement?.style.display === "flex") {
         this.hideModal();
       }
     });
@@ -120,7 +117,9 @@ export class PhotoFinish {
   private updateThumbnail(): void {
     if (!this.thumbnailElement || !this.capturedImageDataURL) return;
 
-    const img = this.thumbnailElement.querySelector('#photo-finish-img') as HTMLImageElement;
+    const img = this.thumbnailElement.querySelector(
+      "#photo-finish-img",
+    ) as HTMLImageElement;
     if (img) {
       img.src = this.capturedImageDataURL;
     }
@@ -129,23 +128,25 @@ export class PhotoFinish {
   private showModal(): void {
     if (!this.modalElement || !this.capturedImageDataURL) return;
 
-    const img = this.modalElement.querySelector('#photo-finish-modal-img') as HTMLImageElement;
+    const img = this.modalElement.querySelector(
+      "#photo-finish-modal-img",
+    ) as HTMLImageElement;
     if (img) {
       img.src = this.capturedImageDataURL;
     }
 
-    this.modalElement.style.display = 'flex';
+    this.modalElement.style.display = "flex";
   }
 
   private hideModal(): void {
     if (!this.modalElement) return;
-    this.modalElement.style.display = 'none';
+    this.modalElement.style.display = "none";
   }
 
   private downloadImage(): void {
     if (!this.capturedImageDataURL) return;
 
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.download = `photo-finish-${Date.now()}.png`;
     link.href = this.capturedImageDataURL;
     link.click();
@@ -153,13 +154,13 @@ export class PhotoFinish {
 
   public show(): void {
     if (this.thumbnailElement && this.capturedImageDataURL) {
-      this.thumbnailElement.style.display = 'block';
+      this.thumbnailElement.style.display = "block";
     }
   }
 
   public hide(): void {
     if (this.thumbnailElement) {
-      this.thumbnailElement.style.display = 'none';
+      this.thumbnailElement.style.display = "none";
     }
     this.hideModal();
   }
@@ -171,7 +172,7 @@ export class PhotoFinish {
   public clear(): void {
     this.capturedImageDataURL = null;
     if (this.thumbnailElement) {
-      this.thumbnailElement.style.display = 'none';
+      this.thumbnailElement.style.display = "none";
     }
     this.hideModal();
   }

@@ -120,25 +120,28 @@ export const leaderboardOverlayStyles = `
   display: none;
 `;
 
-export function renderLeaderboardContent(raceTime: number, leaders: Array<{ position: number; name: string }>): string {
+export function renderLeaderboardContent(
+  raceTime: number,
+  leaders: Array<{ position: number; name: string }>,
+): string {
   const minutes = Math.floor(raceTime / 60);
   const seconds = Math.floor(raceTime % 60);
   const milliseconds = Math.floor((raceTime % 1) * 1000);
-  const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
+  const timeStr = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}.${milliseconds.toString().padStart(3, "0")}`;
 
-  let entriesHtml = '';
+  let entriesHtml = "";
   if (leaders.length === 0) {
     entriesHtml = '<div style="color: #888;">Waiting for race...</div>';
   } else {
-    const positionColors = ['#FFD700', '#C0C0C0', '#CD7F32']; // Gold, Silver, Bronze
-    const medals = ['🥇', '🥈', '🥉'];
+    const positionColors = ["#FFD700", "#C0C0C0", "#CD7F32"]; // Gold, Silver, Bronze
+    const medals = ["🥇", "🥈", "🥉"];
 
     leaders.forEach((entry, index) => {
       const isTopThree = index < 3;
-      const color = isTopThree ? positionColors[index] : '#aaa';
-      const medal = isTopThree ? medals[index] + ' ' : '';
-      const fontWeight = isTopThree ? 'bold' : 'normal';
-      const fontSize = isTopThree ? '14px' : '13px';
+      const color = isTopThree ? positionColors[index] : "#aaa";
+      const medal = isTopThree ? `${medals[index]} ` : "";
+      const fontWeight = isTopThree ? "bold" : "normal";
+      const fontSize = isTopThree ? "14px" : "13px";
 
       entriesHtml += `
         <div style="color: ${color}; font-weight: ${fontWeight}; font-size: ${fontSize};">
@@ -185,7 +188,7 @@ export interface RiderData {
 export function renderRidersContent(riders: RiderData[]): string {
   const ridersHTML = riders
     .map((rider) => {
-      const colorHex = '#' + rider.color.toString(16).padStart(6, '0');
+      const colorHex = `#${rider.color.toString(16).padStart(6, "0")}`;
       const previewHTML = rider.previewImage
         ? `<img src="${rider.previewImage}" style="width: 100%; height: 120px; object-fit: contain; background: #000; border-radius: 4px; margin-bottom: 10px;" />`
         : `<div style="width: 100%; height: 120px; background: #000; border-radius: 4px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; color: #666;">No Preview</div>`;
@@ -228,7 +231,7 @@ export function renderRidersContent(riders: RiderData[]): string {
         </div>
       `;
     })
-    .join('');
+    .join("");
 
   return `
     <div style="
@@ -280,8 +283,8 @@ export const debugOverlayStyles = `
   max-width: 400px;
 `;
 
-export function renderDebugContent(currentTheme: string = 'christmas'): string {
-  const themeName = currentTheme === 'normal' ? 'Normal' : 'Christmas';
+export function renderDebugContent(currentTheme: string = "christmas"): string {
+  const themeName = currentTheme === "normal" ? "Normal" : "Christmas";
   return `
     <div style="font-weight: bold; margin-bottom: 10px; color: #00ff00; font-size: 14px;">
       ⌨️ KEYBOARD CONTROLS

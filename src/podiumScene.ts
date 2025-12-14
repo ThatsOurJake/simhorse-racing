@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import type { Horse } from './raceManager';
+import * as THREE from "three";
+import type { Horse } from "./raceManager";
 
 interface Confetti {
   mesh: THREE.Mesh;
@@ -25,7 +25,12 @@ export class PodiumScene {
     this.createConfetti();
 
     // Camera for podium view
-    this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    this.camera = new THREE.PerspectiveCamera(
+      60,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000,
+    );
     this.camera.position.set(0, 8, 15);
     this.camera.lookAt(0, 2, 0);
 
@@ -43,15 +48,34 @@ export class PodiumScene {
   private createPodiums(): void {
     // Podium positions: center (1st - tallest), left (2nd), right (3rd)
     const podiumData = [
-      { position: new THREE.Vector3(-5, 1.5, 0), height: 3, color: 0xc0c0c0, label: '2nd' }, // Silver (left)
-      { position: new THREE.Vector3(0, 2, 0), height: 4, color: 0xffd700, label: '1st' },    // Gold (center)
-      { position: new THREE.Vector3(5, 1, 0), height: 2, color: 0xcd7f32, label: '3rd' }     // Bronze (right)
+      {
+        position: new THREE.Vector3(-5, 1.5, 0),
+        height: 3,
+        color: 0xc0c0c0,
+        label: "2nd",
+      }, // Silver (left)
+      {
+        position: new THREE.Vector3(0, 2, 0),
+        height: 4,
+        color: 0xffd700,
+        label: "1st",
+      }, // Gold (center)
+      {
+        position: new THREE.Vector3(5, 1, 0),
+        height: 2,
+        color: 0xcd7f32,
+        label: "3rd",
+      }, // Bronze (right)
     ];
 
     podiumData.forEach((data) => {
       // Create podium block
       const geometry = new THREE.BoxGeometry(4, data.height, 4);
-      const material = new THREE.MeshStandardMaterial({ color: data.color, metalness: 0.6, roughness: 0.4 });
+      const material = new THREE.MeshStandardMaterial({
+        color: data.color,
+        metalness: 0.6,
+        roughness: 0.4,
+      });
       const podium = new THREE.Mesh(geometry, material);
       podium.position.copy(data.position);
       podium.castShadow = true;
@@ -60,28 +84,38 @@ export class PodiumScene {
       this.podiumObjects.push(podium);
 
       // Create label
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d')!;
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d")!;
       canvas.width = 256;
       canvas.height = 128;
-      context.fillStyle = '#ffffff';
-      context.font = 'bold 60px Arial';
-      context.textAlign = 'center';
-      context.textBaseline = 'middle';
+      context.fillStyle = "#ffffff";
+      context.font = "bold 60px Arial";
+      context.textAlign = "center";
+      context.textBaseline = "middle";
       context.fillText(data.label, 128, 64);
 
       const texture = new THREE.CanvasTexture(canvas);
-      const labelMaterial = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+      const labelMaterial = new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+      });
       const labelGeometry = new THREE.PlaneGeometry(2, 1);
       const label = new THREE.Mesh(labelGeometry, labelMaterial);
-      label.position.set(data.position.x, data.position.y + data.height / 2 + 0.6, data.position.z + 2.1);
+      label.position.set(
+        data.position.x,
+        data.position.y + data.height / 2 + 0.6,
+        data.position.z + 2.1,
+      );
       this.scene.add(label);
       this.podiumObjects.push(label);
     });
 
     // Add ground plane
     const groundGeometry = new THREE.PlaneGeometry(50, 50);
-    const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x2a2a3e, roughness: 0.8 });
+    const groundMaterial = new THREE.MeshStandardMaterial({
+      color: 0x2a2a3e,
+      roughness: 0.8,
+    });
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = 0;
@@ -92,7 +126,9 @@ export class PodiumScene {
 
   private createConfetti(): void {
     // Create colorful confetti particles
-    const colors = [0xff6b6b, 0x4ecdc4, 0xffe66d, 0xa8e6cf, 0xff8b94, 0xc7ceea, 0xffd3b6];
+    const colors = [
+      0xff6b6b, 0x4ecdc4, 0xffe66d, 0xa8e6cf, 0xff8b94, 0xc7ceea, 0xffd3b6,
+    ];
     const confettiCount = 200;
 
     for (let i = 0; i < confettiCount; i++) {
@@ -100,7 +136,7 @@ export class PodiumScene {
       const material = new THREE.MeshStandardMaterial({
         color: colors[Math.floor(Math.random() * colors.length)],
         metalness: 0.3,
-        roughness: 0.4
+        roughness: 0.4,
       });
       const mesh = new THREE.Mesh(geometry, material);
 
@@ -108,7 +144,7 @@ export class PodiumScene {
       mesh.position.set(
         (Math.random() - 0.5) * 20,
         15 + Math.random() * 5,
-        (Math.random() - 0.5) * 20
+        (Math.random() - 0.5) * 20,
       );
 
       this.scene.add(mesh);
@@ -118,24 +154,24 @@ export class PodiumScene {
         velocity: new THREE.Vector3(
           (Math.random() - 0.5) * 2,
           -2 - Math.random() * 2,
-          (Math.random() - 0.5) * 2
+          (Math.random() - 0.5) * 2,
         ),
         rotationSpeed: new THREE.Vector3(
           (Math.random() - 0.5) * 5,
           (Math.random() - 0.5) * 5,
-          (Math.random() - 0.5) * 5
-        )
+          (Math.random() - 0.5) * 5,
+        ),
       });
     }
   }
 
   private createNameLabel(name: string): THREE.Sprite {
     // Create canvas for text
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d')!;
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d")!;
 
     // Set up text style first to measure
-    context.font = 'bold 32px Arial';
+    context.font = "bold 32px Arial";
     const metrics = context.measureText(name);
     const textWidth = metrics.width;
     const padding = 20; // Padding on each side
@@ -145,16 +181,16 @@ export class PodiumScene {
     canvas.height = 64;
 
     // Re-apply text style after resizing canvas
-    context.font = 'bold 32px Arial';
-    context.textAlign = 'center';
-    context.textBaseline = 'middle';
+    context.font = "bold 32px Arial";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
 
     // Draw background
-    context.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    context.fillStyle = "rgba(0, 0, 0, 0.7)";
     context.fillRect(0, 0, canvas.width, canvas.height);
 
     // Draw text
-    context.fillStyle = '#ffffff';
+    context.fillStyle = "#ffffff";
     context.fillText(name, canvas.width / 2, canvas.height / 2);
 
     // Create sprite from canvas texture
@@ -171,7 +207,7 @@ export class PodiumScene {
 
   public show(topThree: Horse[]): void {
     if (topThree.length === 0) {
-      console.warn('No horses to display on podium');
+      console.warn("No horses to display on podium");
       return;
     }
 
@@ -189,9 +225,9 @@ export class PodiumScene {
     // Position horses on podiums
     // Order: 2nd (left), 1st (center), 3rd (right)
     const positions = [
-      { index: 1, x: -5, y: 4.5 },  // 2nd place on left podium
-      { index: 0, x: 0, y: 6 },      // 1st place on center podium (tallest)
-      { index: 2, x: 5, y: 3 }       // 3rd place on right podium
+      { index: 1, x: -5, y: 4.5 }, // 2nd place on left podium
+      { index: 0, x: 0, y: 6 }, // 1st place on center podium (tallest)
+      { index: 2, x: 5, y: 3 }, // 3rd place on right podium
     ];
 
     positions.forEach((pos) => {
@@ -229,7 +265,7 @@ export class PodiumScene {
     this.confettiParticles.forEach((confetti) => {
       // Apply velocity
       confetti.mesh.position.add(
-        confetti.velocity.clone().multiplyScalar(deltaTime)
+        confetti.velocity.clone().multiplyScalar(deltaTime),
       );
 
       // Apply rotation
@@ -242,12 +278,12 @@ export class PodiumScene {
         confetti.mesh.position.set(
           (Math.random() - 0.5) * 20,
           15 + Math.random() * 5,
-          (Math.random() - 0.5) * 20
+          (Math.random() - 0.5) * 20,
         );
         confetti.velocity.set(
           (Math.random() - 0.5) * 2,
           -2 - Math.random() * 2,
-          (Math.random() - 0.5) * 2
+          (Math.random() - 0.5) * 2,
         );
       }
     });
@@ -288,7 +324,9 @@ export class PodiumScene {
       if (obj instanceof THREE.Mesh) {
         obj.geometry.dispose();
         if (Array.isArray(obj.material)) {
-          obj.material.forEach((mat) => mat.dispose());
+          obj.material.forEach((mat) => {
+            mat.dispose();
+          });
         } else {
           obj.material.dispose();
         }

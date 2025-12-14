@@ -1,7 +1,7 @@
 import {
   leaderboardOverlayStyles,
   renderLeaderboardContent,
-} from './overlayTemplates';
+} from "./overlayTemplates";
 
 export interface LeaderboardEntry {
   position: number;
@@ -20,8 +20,8 @@ export class LeaderboardOverlay {
   }
 
   private createOverlay(): HTMLDivElement {
-    const overlay = document.createElement('div');
-    overlay.id = 'leaderboard-overlay';
+    const overlay = document.createElement("div");
+    overlay.id = "leaderboard-overlay";
     overlay.style.cssText = leaderboardOverlayStyles;
     overlay.innerHTML = renderLeaderboardContent(this.raceTime, []);
     return overlay;
@@ -34,12 +34,12 @@ export class LeaderboardOverlay {
 
   public show(): void {
     this.isVisible = true;
-    this.overlayElement.style.display = 'block';
+    this.overlayElement.style.display = "block";
   }
 
   public hide(): void {
     this.isVisible = false;
-    this.overlayElement.style.display = 'none';
+    this.overlayElement.style.display = "none";
   }
 
   public toggle(): void {

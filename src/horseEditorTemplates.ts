@@ -1,5 +1,3 @@
-import type { HorseData } from './horseStats';
-
 export const containerStyles = `
   position: fixed;
   top: 0;
@@ -50,8 +48,8 @@ export function renderMainTemplate(data: MainTemplateData): string {
 
     <button 
       id="addHorse"
-      ${data.horsesCount >= 8 ? 'disabled' : ''}
-      style="padding: 10px; background: #0a6; color: white; border: none; cursor: pointer; width: 100%; margin-bottom: 10px; ${data.horsesCount >= 8 ? 'opacity: 0.5; cursor: not-allowed;' : ''}"
+      ${data.horsesCount >= 8 ? "disabled" : ""}
+      style="padding: 10px; background: #0a6; color: white; border: none; cursor: pointer; width: 100%; margin-bottom: 10px; ${data.horsesCount >= 8 ? "opacity: 0.5; cursor: not-allowed;" : ""}"
     >
       Add Horse (${data.horsesCount}/8)
     </button>
@@ -79,11 +77,11 @@ export function renderMainTemplate(data: MainTemplateData): string {
     </div>
     <input type="file" id="importFileInput" accept=".json" style="display: none;" />
 
-    <div id="editorForm" style="display: ${data.editingHorseId ? 'block' : 'none'}; border-top: 2px solid #555; padding-top: 20px; margin-top: 20px;">
+    <div id="editorForm" style="display: ${data.editingHorseId ? "block" : "none"}; border-top: 2px solid #555; padding-top: 20px; margin-top: 20px;">
       ${data.editorFormHTML}
     </div>
 
-    <div id="speedGraphContainer" style="margin-top: 20px; display: ${data.editingHorseId ? 'block' : 'none'};">
+    <div id="speedGraphContainer" style="margin-top: 20px; display: ${data.editingHorseId ? "block" : "none"};">
       <h3 style="margin-bottom: 10px;">Speed Graph</h3>
       <canvas id="speedGraphCanvas" width="360" height="200" style="background: #222; border: 1px solid #555;"></canvas>
       <div id="raceTimeInfo" style="margin-top: 10px; color: #aaa; font-size: 12px;"></div>
@@ -105,7 +103,7 @@ export interface HorseItemData {
 export function renderHorseItem(horse: HorseItemData): string {
   return `
     <div 
-      style="background: #222; padding: 10px; margin-bottom: 10px; border-left: 4px solid #${horse.color.toString(16).padStart(6, '0')}; cursor: pointer;"
+      style="background: #222; padding: 10px; margin-bottom: 10px; border-left: 4px solid #${horse.color.toString(16).padStart(6, "0")}; cursor: pointer;"
       data-horse-id="${horse.id}"
       class="horse-item"
     >
@@ -157,11 +155,11 @@ export function renderEditorForm(data: EditorFormData): string {
       id="horseHat"
       style="width: 100%; padding: 5px; background: #333; color: white; border: 1px solid #555; margin-bottom: 15px;"
     >
-      <option value="horse-ears" ${data.hat === 'horse-ears' ? 'selected' : ''}>🐴 Horse Ears</option>
-      <option value="reindeer-antlers" ${data.hat === 'reindeer-antlers' ? 'selected' : ''}>🦌 Reindeer Antlers</option>
-      <option value="top-hat" ${data.hat === 'top-hat' ? 'selected' : ''}>🎩 Top Hat</option>
-      <option value="crown" ${data.hat === 'crown' ? 'selected' : ''}>👑 Crown</option>
-      <option value="propeller-hat" ${data.hat === 'propeller-hat' ? 'selected' : ''}>🚁 Propeller Hat</option>
+      <option value="horse-ears" ${data.hat === "horse-ears" ? "selected" : ""}>🐴 Horse Ears</option>
+      <option value="reindeer-antlers" ${data.hat === "reindeer-antlers" ? "selected" : ""}>🦌 Reindeer Antlers</option>
+      <option value="top-hat" ${data.hat === "top-hat" ? "selected" : ""}>🎩 Top Hat</option>
+      <option value="crown" ${data.hat === "crown" ? "selected" : ""}>👑 Crown</option>
+      <option value="propeller-hat" ${data.hat === "propeller-hat" ? "selected" : ""}>🚁 Propeller Hat</option>
     </select>
 
     <label style="display: block; margin-bottom: 5px;">Face:</label>
@@ -169,12 +167,12 @@ export function renderEditorForm(data: EditorFormData): string {
       id="horseFace"
       style="width: 100%; padding: 5px; background: #333; color: white; border: 1px solid #555; margin-bottom: 15px;"
     >
-      <option value="happy" ${data.face === 'happy' ? 'selected' : ''}>😊 Happy Face</option>
-      <option value="innocent" ${data.face === 'innocent' ? 'selected' : ''}>👀 Innocent Eyes</option>
-      <option value="red-nose" ${data.face === 'red-nose' ? 'selected' : ''}>🔴 Red Nose</option>
-      <option value="angry" ${data.face === 'angry' ? 'selected' : ''}>😠 Angry Face</option>
-      <option value="shocked" ${data.face === 'shocked' ? 'selected' : ''}>😲 Shocked Face</option>
-      <option value="glasses" ${data.face === 'glasses' ? 'selected' : ''}>👓 Glasses</option>
+      <option value="happy" ${data.face === "happy" ? "selected" : ""}>😊 Happy Face</option>
+      <option value="innocent" ${data.face === "innocent" ? "selected" : ""}>👀 Innocent Eyes</option>
+      <option value="red-nose" ${data.face === "red-nose" ? "selected" : ""}>🔴 Red Nose</option>
+      <option value="angry" ${data.face === "angry" ? "selected" : ""}>😠 Angry Face</option>
+      <option value="shocked" ${data.face === "shocked" ? "selected" : ""}>😲 Shocked Face</option>
+      <option value="glasses" ${data.face === "glasses" ? "selected" : ""}>👓 Glasses</option>
     </select>
 
     <label style="display: block; margin-bottom: 5px;">Speed (0-1):</label>

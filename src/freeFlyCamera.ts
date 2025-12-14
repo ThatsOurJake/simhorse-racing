@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 
 export class FreeFlyCamera {
   private camera: THREE.PerspectiveCamera;
@@ -18,7 +18,7 @@ export class FreeFlyCamera {
   private lastWPressTime: number = 0;
 
   // Camera rotation
-  private euler: THREE.Euler = new THREE.Euler(0, 0, 0, 'YXZ');
+  private euler: THREE.Euler = new THREE.Euler(0, 0, 0, "YXZ");
   private pointerLocked: boolean = false;
 
   // World bounds
@@ -36,15 +36,21 @@ export class FreeFlyCamera {
 
   private setupEventListeners(): void {
     // Keyboard events
-    window.addEventListener('keydown', this.onKeyDown.bind(this));
-    window.addEventListener('keyup', this.onKeyUp.bind(this));
+    window.addEventListener("keydown", this.onKeyDown.bind(this));
+    window.addEventListener("keyup", this.onKeyUp.bind(this));
 
     // Mouse events
-    document.addEventListener('mousemove', this.onMouseMove.bind(this));
+    document.addEventListener("mousemove", this.onMouseMove.bind(this));
 
     // Pointer lock events
-    document.addEventListener('pointerlockchange', this.onPointerLockChange.bind(this));
-    document.addEventListener('pointerlockerror', this.onPointerLockError.bind(this));
+    document.addEventListener(
+      "pointerlockchange",
+      this.onPointerLockChange.bind(this),
+    );
+    document.addEventListener(
+      "pointerlockerror",
+      this.onPointerLockError.bind(this),
+    );
   }
 
   private onKeyDown(event: KeyboardEvent): void {
@@ -52,7 +58,7 @@ export class FreeFlyCamera {
     const key = event.key.toLowerCase();
 
     // Detect double-tap W for sprint (ignore key repeat events)
-    if (key === 'w' && !this.keys.has('w')) {
+    if (key === "w" && !this.keys.has("w")) {
       const currentTime = performance.now();
       if (currentTime - this.lastWPressTime < this.DOUBLE_TAP_WINDOW) {
         this.isSprinting = true;
@@ -68,7 +74,7 @@ export class FreeFlyCamera {
     const key = event.key.toLowerCase();
 
     // Reset sprint when W is released
-    if (key === 'w') {
+    if (key === "w") {
       this.isSprinting = false;
     }
 
@@ -96,7 +102,7 @@ export class FreeFlyCamera {
   }
 
   private onPointerLockError(): void {
-    console.error('Pointer lock error');
+    console.error("Pointer lock error");
   }
 
   private requestPointerLock(): void {
@@ -127,7 +133,7 @@ export class FreeFlyCamera {
     this.requestPointerLock();
 
     this.isActive = true;
-    console.log('Free fly camera activated');
+    console.log("Free fly camera activated");
   }
 
   public deactivate(): void {
@@ -142,7 +148,7 @@ export class FreeFlyCamera {
     this.isSprinting = false;
 
     this.isActive = false;
-    console.log('Free fly camera deactivated');
+    console.log("Free fly camera deactivated");
   }
 
   public toggle(): void {
@@ -166,29 +172,30 @@ export class FreeFlyCamera {
     right.crossVectors(forward, this.camera.up).normalize();
 
     // Determine sprint multiplier (active only when W is held and double-tapped)
-    const speed = this.BASE_SPEED * (this.isSprinting ? this.SPRINT_MULTIPLIER : 1);
+    const speed =
+      this.BASE_SPEED * (this.isSprinting ? this.SPRINT_MULTIPLIER : 1);
 
     // Forward/Back (W/S)
-    if (this.keys.has('w')) {
+    if (this.keys.has("w")) {
       direction.add(forward);
     }
-    if (this.keys.has('s')) {
+    if (this.keys.has("s")) {
       direction.sub(forward);
     }
 
     // Left/Right (A/D)
-    if (this.keys.has('a')) {
+    if (this.keys.has("a")) {
       direction.sub(right);
     }
-    if (this.keys.has('d')) {
+    if (this.keys.has("d")) {
       direction.add(right);
     }
 
     // Up/Down (Space/Shift) - world space, not camera relative
-    if (this.keys.has(' ')) {
+    if (this.keys.has(" ")) {
       direction.y += 1;
     }
-    if (this.keys.has('shift')) {
+    if (this.keys.has("shift")) {
       direction.y -= 1;
     }
 
@@ -206,15 +213,30 @@ export class FreeFlyCamera {
     newPosition.add(this.velocity.clone().multiplyScalar(deltaTime));
 
     // Apply world bounds constraints
-    newPosition.x = Math.max(-this.WORLD_BOUNDS, Math.min(this.WORLD_BOUNDS, newPosition.x));
-    newPosition.z = Math.max(-this.WORLD_BOUNDS, Math.min(this.WORLD_BOUNDS, newPosition.z));
-    newPosition.y = Math.max(this.MIN_Y, Math.min(this.WORLD_BOUNDS, newPosition.y));
+    newPosition.x = Math.max(
+      -this.WORLD_BOUNDS,
+      Math.min(this.WORLD_BOUNDS, newPosition.x),
+    );
+    newPosition.z = Math.max(
+      -this.WORLD_BOUNDS,
+      Math.min(this.WORLD_BOUNDS, newPosition.z),
+    );
+    newPosition.y = Math.max(
+      this.MIN_Y,
+      Math.min(this.WORLD_BOUNDS, newPosition.y),
+    );
 
     // Check if we hit a boundary and zero velocity on that axis
-    if (newPosition.x === -this.WORLD_BOUNDS || newPosition.x === this.WORLD_BOUNDS) {
+    if (
+      newPosition.x === -this.WORLD_BOUNDS ||
+      newPosition.x === this.WORLD_BOUNDS
+    ) {
       this.velocity.x = 0;
     }
-    if (newPosition.z === -this.WORLD_BOUNDS || newPosition.z === this.WORLD_BOUNDS) {
+    if (
+      newPosition.z === -this.WORLD_BOUNDS ||
+      newPosition.z === this.WORLD_BOUNDS
+    ) {
       this.velocity.z = 0;
     }
     if (newPosition.y === this.MIN_Y || newPosition.y === this.WORLD_BOUNDS) {

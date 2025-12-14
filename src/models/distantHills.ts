@@ -1,6 +1,6 @@
-import * as THREE from 'three';
-import { getThemeConfig, type ThemeType } from '../themeConfig';
-import type { RaceTrackConfig } from '../raceTrack';
+import * as THREE from "three";
+import type { RaceTrackConfig } from "../raceTrack";
+import { getThemeConfig, type ThemeType } from "../themeConfig";
 
 /**
  * Creates distant hills around the race track to hide the ground plane edge
@@ -11,7 +11,7 @@ import type { RaceTrackConfig } from '../raceTrack';
 export function createDistantHills(
   group: THREE.Group,
   config: RaceTrackConfig,
-  currentTheme: ThemeType
+  currentTheme: ThemeType,
 ): void {
   const themeConfig = getThemeConfig(currentTheme);
   const numSegments = 128; // More segments for smoother continuous ring
@@ -21,11 +21,12 @@ export function createDistantHills(
   const maxHeight = 24; // Increased to prevent gaps at low camera angles
 
   // Color based on theme
-  const hillColor = themeConfig.fenceType === 'candy-cane' ? 0xffffff : 0x2d5016;
+  const hillColor =
+    themeConfig.fenceType === "candy-cane" ? 0xffffff : 0x2d5016;
   const material = new THREE.MeshStandardMaterial({
     color: hillColor,
     roughness: 0.9,
-    metalness: 0.0
+    metalness: 0.0,
   });
 
   // Calculate approximate oval circumference
@@ -39,7 +40,7 @@ export function createDistantHills(
   // Create hills around the oval
   for (let i = 0; i < numSegments; i++) {
     const distance = (i / numSegments) * totalCircumference;
-    let x, z;
+    let x: number, z: number;
 
     // Calculate position based on distance around track
     if (distance < straightLength) {
@@ -81,7 +82,7 @@ export function createDistantHills(
     hill.position.set(x, height / 2 - 3, z);
 
     // Squash vertically and widen at base for natural hill shape
-    hill.scale.set(1.2, height / baseRadius * 0.4, 1.2);
+    hill.scale.set(1.2, (height / baseRadius) * 0.4, 1.2);
 
     hill.receiveShadow = true;
     hill.castShadow = true;

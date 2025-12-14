@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import type * as THREE from "three";
 
 interface WaveSpectator {
   group: THREE.Group;
@@ -24,7 +24,7 @@ export class CrowdWaveController {
 
   // Calculated completion threshold (allow last spectators to finish their jump)
   private get WAVE_COMPLETION_THRESHOLD(): number {
-    return 1.0 + (this.JUMP_DURATION / this.WAVE_DURATION);
+    return 1.0 + this.JUMP_DURATION / this.WAVE_DURATION;
   }
 
   public addSpectator(spectator: WaveSpectator): void {
@@ -40,7 +40,7 @@ export class CrowdWaveController {
       return;
     }
 
-    console.log('Starting crowd wave!');
+    console.log("Starting crowd wave!");
     this.isWaveActive = true;
     this.waveStartTime = this.elapsedTime;
   }
@@ -57,7 +57,8 @@ export class CrowdWaveController {
     }
 
     // Calculate how far through the wave we are (0.0 to 1.0)
-    const waveProgress = (this.elapsedTime - this.waveStartTime) / this.WAVE_DURATION;
+    const waveProgress =
+      (this.elapsedTime - this.waveStartTime) / this.WAVE_DURATION;
 
     if (waveProgress >= this.WAVE_COMPLETION_THRESHOLD) {
       this.finishWave();
@@ -70,9 +71,14 @@ export class CrowdWaveController {
     }
   }
 
-  private updateSpectatorWave(spectator: WaveSpectator, waveProgress: number): void {
+  private updateSpectatorWave(
+    spectator: WaveSpectator,
+    waveProgress: number,
+  ): void {
     // Find which position this bleacher is in the wave sequence
-    const bleacherOrderIndex = this.bleacherWaveOrder.indexOf(spectator.bleacherIndex);
+    const bleacherOrderIndex = this.bleacherWaveOrder.indexOf(
+      spectator.bleacherIndex,
+    );
     if (bleacherOrderIndex === -1) return;
 
     // Calculate when this bleacher's section of the wave starts and ends
@@ -83,14 +89,20 @@ export class CrowdWaveController {
 
     // Within this bleacher, calculate when THIS spectator should jump
     // positionInBleacher ranges from 1 (right) to 0 (left), creating right-to-left ripple
-    const spectatorStartProgress = bleacherStartProgress + (spectator.positionInBleacher * bleacherDuration);
+    const spectatorStartProgress =
+      bleacherStartProgress + spectator.positionInBleacher * bleacherDuration;
     const jumpDurationNormalized = this.JUMP_DURATION / this.WAVE_DURATION;
-    const spectatorEndProgress = spectatorStartProgress + jumpDurationNormalized;
+    const spectatorEndProgress =
+      spectatorStartProgress + jumpDurationNormalized;
 
     // Calculate jump height using sine wave for smooth motion
     let jumpOffset = 0;
-    if (waveProgress >= spectatorStartProgress && waveProgress <= spectatorEndProgress) {
-      const jumpProgress = (waveProgress - spectatorStartProgress) / jumpDurationNormalized;
+    if (
+      waveProgress >= spectatorStartProgress &&
+      waveProgress <= spectatorEndProgress
+    ) {
+      const jumpProgress =
+        (waveProgress - spectatorStartProgress) / jumpDurationNormalized;
       jumpOffset = Math.sin(jumpProgress * Math.PI) * this.WAVE_JUMP_HEIGHT;
     }
 
@@ -99,7 +111,7 @@ export class CrowdWaveController {
   }
 
   private finishWave(): void {
-    console.log('Crowd wave finished!');
+    console.log("Crowd wave finished!");
 
     // Reset all spectators to original positions
     for (const spectator of this.spectators) {

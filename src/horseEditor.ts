@@ -1,22 +1,22 @@
 import {
-  generateHorseName,
-  generateBaseSpeed,
-  calculateSpeedCurve,
-  calculateRaceTime,
-  generateRandomStats,
-} from './horseStats';
-import type { HorseData, HorseStats } from './horseStats';
-import { SpeedGraph } from './speedGraph';
-import {
   containerStyles,
-  renderMainTemplate,
-  renderHorseItem,
-  renderEmptyHorseList,
-  renderEditorForm,
-  type HorseItemData,
   type EditorFormData,
-} from './horseEditorTemplates';
-import { validateRaceConfig, type RaceConfig } from './raceConfigSchema';
+  type HorseItemData,
+  renderEditorForm,
+  renderEmptyHorseList,
+  renderHorseItem,
+  renderMainTemplate,
+} from "./horseEditorTemplates";
+import type { HorseData, HorseStats } from "./horseStats";
+import {
+  calculateRaceTime,
+  calculateSpeedCurve,
+  generateBaseSpeed,
+  generateHorseName,
+  generateRandomStats,
+} from "./horseStats";
+import { type RaceConfig, validateRaceConfig } from "./raceConfigSchema";
+import { SpeedGraph } from "./speedGraph";
 
 export class HorseEditor {
   private container: HTMLDivElement;
@@ -27,7 +27,10 @@ export class HorseEditor {
   private trackLength: number;
   private isOpen: boolean = false;
   private editingHorseId: string | null = null;
-  private nameData: { descriptiveWords: string[]; christmasItems: string[] } | null = null;
+  private nameData: {
+    descriptiveWords: string[];
+    christmasItems: string[];
+  } | null = null;
 
   constructor(trackLength: number) {
     this.trackLength = trackLength;
@@ -40,10 +43,10 @@ export class HorseEditor {
 
   private async loadNameData(): Promise<void> {
     try {
-      const response = await fetch('/horseNames.json');
+      const response = await fetch("/horseNames.json");
       this.nameData = await response.json();
     } catch (error) {
-      console.error('Failed to load horse names:', error);
+      console.error("Failed to load horse names:", error);
     }
   }
 
@@ -52,12 +55,14 @@ export class HorseEditor {
       return generateHorseName(this.raceSeed); // Fallback to old method
     }
 
-    const descriptive = this.nameData.descriptiveWords[
-      Math.floor(Math.random() * this.nameData.descriptiveWords.length)
-    ];
-    const christmasItem = this.nameData.christmasItems[
-      Math.floor(Math.random() * this.nameData.christmasItems.length)
-    ];
+    const descriptive =
+      this.nameData.descriptiveWords[
+        Math.floor(Math.random() * this.nameData.descriptiveWords.length)
+      ];
+    const christmasItem =
+      this.nameData.christmasItems[
+        Math.floor(Math.random() * this.nameData.christmasItems.length)
+      ];
 
     return `${descriptive} ${christmasItem}`;
   }
@@ -67,9 +72,9 @@ export class HorseEditor {
   }
 
   private createUI(): HTMLDivElement {
-    const container = document.createElement('div');
+    const container = document.createElement("div");
     container.style.cssText = containerStyles;
-    container.style.transform = 'translateX(100%)'; // Start hidden
+    container.style.transform = "translateX(100%)"; // Start hidden
 
     this.updateUI(container);
     return container;
@@ -111,14 +116,14 @@ export class HorseEditor {
 
         return renderHorseItem(horseData);
       })
-      .join('');
+      .join("");
   }
 
   private renderEditorForm(): string {
-    if (!this.editingHorseId) return '';
+    if (!this.editingHorseId) return "";
 
     const horse = this.horses.find((h) => h.id === this.editingHorseId);
-    if (!horse) return '';
+    if (!horse) return "";
 
     const formData: EditorFormData = {
       horseName: horse.name,
@@ -134,10 +139,10 @@ export class HorseEditor {
 
   private attachEventListeners(container: HTMLDivElement): void {
     // Race seed input
-    const seedInput = container.querySelector('#raceSeed') as HTMLInputElement;
+    const seedInput = container.querySelector("#raceSeed") as HTMLInputElement;
     if (seedInput) {
-      seedInput.addEventListener('change', () => {
-        const newSeed = parseInt(seedInput.value) || 0;
+      seedInput.addEventListener("change", () => {
+        const newSeed = parseInt(seedInput.value, 10) || 0;
         if (newSeed !== this.raceSeed) {
           this.raceSeed = newSeed;
           this.regenerateAllBaseSpeeds();
@@ -146,9 +151,9 @@ export class HorseEditor {
     }
 
     // Randomize seed button
-    const randomizeBtn = container.querySelector('#randomizeSeed');
+    const randomizeBtn = container.querySelector("#randomizeSeed");
     if (randomizeBtn) {
-      randomizeBtn.addEventListener('click', () => {
+      randomizeBtn.addEventListener("click", () => {
         this.raceSeed = this.generateRandomSeed();
         this.regenerateAllBaseSpeeds();
         this.updateUI(this.container);
@@ -156,83 +161,93 @@ export class HorseEditor {
     }
 
     // Add horse button
-    const addBtn = container.querySelector('#addHorse');
+    const addBtn = container.querySelector("#addHorse");
     if (addBtn) {
-      addBtn.addEventListener('click', () => this.addHorse());
+      addBtn.addEventListener("click", () => this.addHorse());
     }
 
     // Randomize race button
-    const randomizeRaceBtn = container.querySelector('#randomizeRace');
+    const randomizeRaceBtn = container.querySelector("#randomizeRace");
     if (randomizeRaceBtn) {
-      randomizeRaceBtn.addEventListener('click', () => this.randomizeFullRace());
+      randomizeRaceBtn.addEventListener("click", () =>
+        this.randomizeFullRace(),
+      );
     }
 
     // Export race button
-    const exportBtn = container.querySelector('#exportRace');
+    const exportBtn = container.querySelector("#exportRace");
     if (exportBtn) {
-      exportBtn.addEventListener('click', () => this.exportRace());
+      exportBtn.addEventListener("click", () => this.exportRace());
     }
 
     // Import race button
-    const importBtn = container.querySelector('#importRace');
-    const importFileInput = container.querySelector('#importFileInput') as HTMLInputElement;
+    const importBtn = container.querySelector("#importRace");
+    const importFileInput = container.querySelector(
+      "#importFileInput",
+    ) as HTMLInputElement;
     if (importBtn && importFileInput) {
-      importBtn.addEventListener('click', () => importFileInput.click());
-      importFileInput.addEventListener('change', (e) => this.handleImportFile(e));
+      importBtn.addEventListener("click", () => importFileInput.click());
+      importFileInput.addEventListener("change", (e) =>
+        this.handleImportFile(e),
+      );
     }
 
     // Delete horse buttons
-    const deleteButtons = container.querySelectorAll('.deleteHorse');
+    const deleteButtons = container.querySelectorAll(".deleteHorse");
     deleteButtons.forEach((btn) => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener("click", (e) => {
         e.stopPropagation();
-        const horseId = (btn as HTMLElement).getAttribute('data-horse-id');
+        const horseId = (btn as HTMLElement).getAttribute("data-horse-id");
         if (horseId) this.deleteHorse(horseId);
       });
     });
 
     // Horse item click (for editing)
-    const horseItems = container.querySelectorAll('.horse-item');
+    const horseItems = container.querySelectorAll(".horse-item");
     horseItems.forEach((item) => {
-      item.addEventListener('click', () => {
-        const horseId = (item as HTMLElement).getAttribute('data-horse-id');
+      item.addEventListener("click", () => {
+        const horseId = (item as HTMLElement).getAttribute("data-horse-id");
         if (horseId) this.editHorse(horseId);
       });
     });
 
     // Save button
-    const saveBtn = container.querySelector('#saveHorse');
+    const saveBtn = container.querySelector("#saveHorse");
     if (saveBtn) {
-      saveBtn.addEventListener('click', () => this.saveHorseEdits());
+      saveBtn.addEventListener("click", () => this.saveHorseEdits());
     }
 
     // Cancel button
-    const cancelBtn = container.querySelector('#cancelEdit');
+    const cancelBtn = container.querySelector("#cancelEdit");
     if (cancelBtn) {
-      cancelBtn.addEventListener('click', () => {
+      cancelBtn.addEventListener("click", () => {
         this.editingHorseId = null;
         this.updateUI(this.container);
       });
     }
 
     // Randomize stats button
-    const randomizeStatsBtn = container.querySelector('#randomizeStats');
+    const randomizeStatsBtn = container.querySelector("#randomizeStats");
     if (randomizeStatsBtn) {
-      randomizeStatsBtn.addEventListener('click', () => this.randomizeCurrentHorseStats());
+      randomizeStatsBtn.addEventListener("click", () =>
+        this.randomizeCurrentHorseStats(),
+      );
     }
 
     // Randomize name button
-    const randomizeNameBtn = container.querySelector('#randomizeName');
+    const randomizeNameBtn = container.querySelector("#randomizeName");
     if (randomizeNameBtn) {
-      randomizeNameBtn.addEventListener('click', () => this.randomizeCurrentHorseName());
+      randomizeNameBtn.addEventListener("click", () =>
+        this.randomizeCurrentHorseName(),
+      );
     }
 
     // Live update for stat changes
-    const statInputs = ['horseSpeed', 'horseStamina', 'horseAcceleration'];
+    const statInputs = ["horseSpeed", "horseStamina", "horseAcceleration"];
     statInputs.forEach((inputId) => {
       const input = container.querySelector(`#${inputId}`) as HTMLInputElement;
       if (input) {
-        input.addEventListener('input', () => this.updateSpeedGraph());
+        input.addEventListener("input", () => this.updateSpeedGraph());
       }
     });
   }
@@ -247,8 +262,8 @@ export class HorseEditor {
       stats: generateRandomStats(),
       baseSpeed: generateBaseSpeed(this.raceSeed, horseIndex),
       color: this.generateHorseColor(horseIndex),
-      hat: 'horse-ears',
-      face: 'happy',
+      hat: "horse-ears",
+      face: "happy",
     };
 
     this.horses.push(horse);
@@ -274,12 +289,27 @@ export class HorseEditor {
 
     // Add 8 random horses
     for (let i = 0; i < 8; i++) {
-      const hats: ('horse-ears' | 'reindeer-antlers' | 'top-hat' | 'crown' | 'propeller-hat')[] = [
-        'horse-ears', 'reindeer-antlers', 'top-hat', 'crown', 'propeller-hat'
+      const hats: (
+        | "horse-ears"
+        | "reindeer-antlers"
+        | "top-hat"
+        | "crown"
+        | "propeller-hat"
+      )[] = [
+        "horse-ears",
+        "reindeer-antlers",
+        "top-hat",
+        "crown",
+        "propeller-hat",
       ];
-      const faces: ('happy' | 'innocent' | 'red-nose' | 'angry' | 'shocked' | 'glasses')[] = [
-        'happy', 'innocent', 'red-nose', 'angry', 'shocked', 'glasses'
-      ];
+      const faces: (
+        | "happy"
+        | "innocent"
+        | "red-nose"
+        | "angry"
+        | "shocked"
+        | "glasses"
+      )[] = ["happy", "innocent", "red-nose", "angry", "shocked", "glasses"];
 
       const horse: HorseData = {
         id: `horse-${Date.now()}-${Math.random()}`,
@@ -309,26 +339,51 @@ export class HorseEditor {
     const horse = this.horses.find((h) => h.id === this.editingHorseId);
     if (!horse) return;
 
-    const nameInput = this.container.querySelector('#horseName') as HTMLInputElement;
-    const speedInput = this.container.querySelector('#horseSpeed') as HTMLInputElement;
-    const staminaInput = this.container.querySelector('#horseStamina') as HTMLInputElement;
-    const accelInput = this.container.querySelector('#horseAcceleration') as HTMLInputElement;
-    const hatSelect = this.container.querySelector('#horseHat') as HTMLSelectElement;
-    const faceSelect = this.container.querySelector('#horseFace') as HTMLSelectElement;
+    const nameInput = this.container.querySelector(
+      "#horseName",
+    ) as HTMLInputElement;
+    const speedInput = this.container.querySelector(
+      "#horseSpeed",
+    ) as HTMLInputElement;
+    const staminaInput = this.container.querySelector(
+      "#horseStamina",
+    ) as HTMLInputElement;
+    const accelInput = this.container.querySelector(
+      "#horseAcceleration",
+    ) as HTMLInputElement;
+    const hatSelect = this.container.querySelector(
+      "#horseHat",
+    ) as HTMLSelectElement;
+    const faceSelect = this.container.querySelector(
+      "#horseFace",
+    ) as HTMLSelectElement;
 
     const oldSpeed = horse.stats.speed;
     const newSpeed = this.clamp(parseFloat(speedInput.value) || 0.5, 0, 1);
 
     horse.name = nameInput.value;
     horse.stats.speed = newSpeed;
-    horse.stats.stamina = this.clamp(parseFloat(staminaInput.value) || 0.5, 0, 1);
-    horse.stats.acceleration = this.clamp(parseFloat(accelInput.value) || 0.5, 0, 1);
-    horse.hat = hatSelect.value as 'horse-ears' | 'reindeer-antlers' | 'top-hat';
-    horse.face = faceSelect.value as 'happy' | 'innocent' | 'red-nose';
+    horse.stats.stamina = this.clamp(
+      parseFloat(staminaInput.value) || 0.5,
+      0,
+      1,
+    );
+    horse.stats.acceleration = this.clamp(
+      parseFloat(accelInput.value) || 0.5,
+      0,
+      1,
+    );
+    horse.hat = hatSelect.value as
+      | "horse-ears"
+      | "reindeer-antlers"
+      | "top-hat";
+    horse.face = faceSelect.value as "happy" | "innocent" | "red-nose";
 
     // Regenerate base speed only if max speed changed
     if (oldSpeed !== newSpeed) {
-      const horseIndex = this.horses.findIndex((h) => h.id === this.editingHorseId);
+      const horseIndex = this.horses.findIndex(
+        (h) => h.id === this.editingHorseId,
+      );
       horse.baseSpeed = generateBaseSpeed(this.raceSeed, horseIndex);
     }
 
@@ -348,9 +403,15 @@ export class HorseEditor {
   private randomizeCurrentHorseStats(): void {
     if (!this.editingHorseId) return;
 
-    const speedInput = this.container.querySelector('#horseSpeed') as HTMLInputElement;
-    const staminaInput = this.container.querySelector('#horseStamina') as HTMLInputElement;
-    const accelInput = this.container.querySelector('#horseAcceleration') as HTMLInputElement;
+    const speedInput = this.container.querySelector(
+      "#horseSpeed",
+    ) as HTMLInputElement;
+    const staminaInput = this.container.querySelector(
+      "#horseStamina",
+    ) as HTMLInputElement;
+    const accelInput = this.container.querySelector(
+      "#horseAcceleration",
+    ) as HTMLInputElement;
 
     if (!speedInput || !staminaInput || !accelInput) return;
 
@@ -365,7 +426,9 @@ export class HorseEditor {
   private randomizeCurrentHorseName(): void {
     if (!this.editingHorseId) return;
 
-    const nameInput = this.container.querySelector('#horseName') as HTMLInputElement;
+    const nameInput = this.container.querySelector(
+      "#horseName",
+    ) as HTMLInputElement;
     if (!nameInput) return;
 
     nameInput.value = this.generateRandomName();
@@ -378,9 +441,15 @@ export class HorseEditor {
     if (!horse) return;
 
     // Get current values from inputs
-    const speedInput = this.container.querySelector('#horseSpeed') as HTMLInputElement;
-    const staminaInput = this.container.querySelector('#horseStamina') as HTMLInputElement;
-    const accelInput = this.container.querySelector('#horseAcceleration') as HTMLInputElement;
+    const speedInput = this.container.querySelector(
+      "#horseSpeed",
+    ) as HTMLInputElement;
+    const staminaInput = this.container.querySelector(
+      "#horseStamina",
+    ) as HTMLInputElement;
+    const accelInput = this.container.querySelector(
+      "#horseAcceleration",
+    ) as HTMLInputElement;
 
     if (!speedInput || !staminaInput || !accelInput) return;
 
@@ -394,12 +463,14 @@ export class HorseEditor {
     const speedCurve = calculateSpeedCurve(tempHorse, this.trackLength);
     const raceTime = calculateRaceTime(speedCurve);
 
-    const canvas = this.container.querySelector('#speedGraphCanvas') as HTMLCanvasElement;
+    const canvas = this.container.querySelector(
+      "#speedGraphCanvas",
+    ) as HTMLCanvasElement;
     if (canvas) {
       this.speedGraph.draw(canvas, speedCurve);
     }
 
-    const raceTimeInfo = this.container.querySelector('#raceTimeInfo');
+    const raceTimeInfo = this.container.querySelector("#raceTimeInfo");
     if (raceTimeInfo) {
       raceTimeInfo.textContent = `Estimated race time: ${raceTime.toFixed(2)}s`;
     }
@@ -431,16 +502,16 @@ export class HorseEditor {
 
   private exportRace(): void {
     const raceConfig: RaceConfig = {
-      version: '1.0',
+      version: "1.0",
       raceSeed: this.raceSeed,
       horses: this.horses,
     };
 
     const jsonString = JSON.stringify(raceConfig, null, 2);
-    const blob = new Blob([jsonString], { type: 'application/json' });
+    const blob = new Blob([jsonString], { type: "application/json" });
     const url = URL.createObjectURL(blob);
 
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
     link.download = `reindeer-race-${Date.now()}.json`;
     link.click();
@@ -461,20 +532,20 @@ export class HorseEditor {
       const validation = validateRaceConfig(json);
       if (!validation.success) {
         const errorMessage = validation.issues
-          ? `${validation.error}:\n${validation.issues.join('\n')}`
+          ? `${validation.error}:\n${validation.issues.join("\n")}`
           : validation.error;
         alert(errorMessage);
-        input.value = ''; // Reset file input
+        input.value = ""; // Reset file input
         return;
       }
 
       // Check if we need confirmation
       if (this.horses.length > 0) {
         const confirmed = confirm(
-          `This will replace your current ${this.horses.length} horse(s). Continue?`
+          `This will replace your current ${this.horses.length} horse(s). Continue?`,
         );
         if (!confirmed) {
-          input.value = ''; // Reset file input
+          input.value = ""; // Reset file input
           return;
         }
       }
@@ -486,12 +557,13 @@ export class HorseEditor {
       this.notifyHorsesChanged();
       this.updateUI(this.container);
 
-      alert('✅ Race imported successfully!');
+      alert("✅ Race imported successfully!");
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Invalid JSON file format';
+      const errorMsg =
+        error instanceof Error ? error.message : "Invalid JSON file format";
       alert(`❌ Import Failed\n\n${errorMsg}`);
     } finally {
-      input.value = ''; // Reset file input
+      input.value = ""; // Reset file input
     }
   }
 
@@ -509,20 +581,20 @@ export class HorseEditor {
 
   public open(): void {
     this.isOpen = true;
-    this.container.style.transform = 'translateX(0)';
+    this.container.style.transform = "translateX(0)";
   }
 
   public close(): void {
     this.isOpen = false;
-    this.container.style.transform = 'translateX(100%)';
+    this.container.style.transform = "translateX(100%)";
   }
 
   public hide(): void {
-    this.container.style.display = 'none';
+    this.container.style.display = "none";
   }
 
   public show(): void {
-    this.container.style.display = 'block';
+    this.container.style.display = "block";
   }
 
   public toggle(): void {

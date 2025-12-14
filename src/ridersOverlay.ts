@@ -1,7 +1,11 @@
-import * as THREE from 'three';
-import type { HorseData } from './horseStats';
-import { ridersOverlayStyles, renderRidersContent, type RiderData } from './overlayTemplates';
-import { createHat, createFace } from './horseAccessories';
+import * as THREE from "three";
+import { createFace, createHat } from "./horseAccessories";
+import type { HorseData } from "./horseStats";
+import {
+  type RiderData,
+  renderRidersContent,
+  ridersOverlayStyles,
+} from "./overlayTemplates";
 
 export class RidersOverlay {
   private overlayElement: HTMLDivElement;
@@ -13,8 +17,8 @@ export class RidersOverlay {
   }
 
   private createOverlay(): HTMLDivElement {
-    const overlay = document.createElement('div');
-    overlay.id = 'riders-overlay';
+    const overlay = document.createElement("div");
+    overlay.id = "riders-overlay";
     overlay.style.cssText = ridersOverlayStyles;
     return overlay;
   }
@@ -49,16 +53,18 @@ export class RidersOverlay {
 
     // Add face
     const faceAccessories = createFace(horse.face, horseMesh);
-    faceAccessories.forEach(accessory => horseMesh.add(accessory));
+    faceAccessories.forEach((accessory) => {
+      horseMesh.add(accessory);
+    });
 
     // Create renderer
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     canvas.width = 256;
     canvas.height = 256;
     const renderer = new THREE.WebGLRenderer({
       canvas,
       alpha: true,
-      antialias: true
+      antialias: true,
     });
     renderer.setSize(256, 256);
     renderer.setClearColor(0x000000, 1);
@@ -67,7 +73,7 @@ export class RidersOverlay {
     renderer.render(scene, camera);
 
     // Convert to data URL
-    const dataURL = canvas.toDataURL('image/png');
+    const dataURL = canvas.toDataURL("image/png");
 
     // Cleanup
     geometry.dispose();
@@ -87,7 +93,10 @@ export class RidersOverlay {
     // Calculate weighted score for each horse
     // Speed is most important, then stamina, then acceleration
     const scores = horses.map((horse) => {
-      const score = horse.stats.speed * 0.5 + horse.stats.stamina * 0.3 + horse.stats.acceleration * 0.2;
+      const score =
+        horse.stats.speed * 0.5 +
+        horse.stats.stamina * 0.3 +
+        horse.stats.acceleration * 0.2;
       return { id: horse.id, score };
     });
 
@@ -158,12 +167,12 @@ export class RidersOverlay {
 
   public show(): void {
     this.isVisible = true;
-    this.overlayElement.style.display = 'flex';
+    this.overlayElement.style.display = "flex";
   }
 
   public hide(): void {
     this.isVisible = false;
-    this.overlayElement.style.display = 'none';
+    this.overlayElement.style.display = "none";
   }
 
   public isShown(): boolean {

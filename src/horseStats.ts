@@ -4,8 +4,19 @@ export interface HorseStats {
   acceleration: number; // 0-1, how fast to reach max speed
 }
 
-export type HatType = 'horse-ears' | 'reindeer-antlers' | 'top-hat' | 'crown' | 'propeller-hat';
-export type FaceType = 'happy' | 'innocent' | 'red-nose' | 'angry' | 'shocked' | 'glasses';
+export type HatType =
+  | "horse-ears"
+  | "reindeer-antlers"
+  | "top-hat"
+  | "crown"
+  | "propeller-hat";
+export type FaceType =
+  | "happy"
+  | "innocent"
+  | "red-nose"
+  | "angry"
+  | "shocked"
+  | "glasses";
 
 export interface HorseData {
   id: string;
@@ -47,10 +58,14 @@ export function generateRandomStats(): HorseStats {
  */
 export function calculateSpeedCurve(
   horse: HorseData,
-  trackLength: number
+  trackLength: number,
 ): SpeedPoint[] {
   const points: SpeedPoint[] = [];
-  const { speed: speedStat, stamina: staminaStat, acceleration: accelerationStat } = horse.stats;
+  const {
+    speed: speedStat,
+    stamina: staminaStat,
+    acceleration: accelerationStat,
+  } = horse.stats;
 
   // Calculate actual speeds - wider range for more drama
   const maxSpeed = horse.baseSpeed * (0.6 + speedStat * 0.7); // 60-130% of base speed
@@ -78,7 +93,8 @@ export function calculateSpeedCurve(
     } else {
       // Final stretch - horses push for the finish
       const t = (distance - midRaceEnd) / finalStretch;
-      const pushSpeed = cruisingSpeed + (maxSpeed - cruisingSpeed) * (0.5 + staminaStat * 0.5);
+      const pushSpeed =
+        cruisingSpeed + (maxSpeed - cruisingSpeed) * (0.5 + staminaStat * 0.5);
       currentSpeed = cruisingSpeed + (pushSpeed - cruisingSpeed) * t;
     }
 

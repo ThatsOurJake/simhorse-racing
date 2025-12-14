@@ -2,44 +2,44 @@
  * Theme configuration for the race track
  */
 
-export type ThemeType = 'normal' | 'christmas';
+export type ThemeType = "normal" | "christmas";
 
 export interface ThemeConfig {
   name: string;
   groundColor: number;
-  groundTexture?: 'grass' | 'snow';
-  fenceType: 'post' | 'candy-cane';
+  groundTexture?: "grass" | "snow";
+  fenceType: "post" | "candy-cane";
   skyColor: number;
 }
 
 export const THEMES: Record<ThemeType, ThemeConfig> = {
   normal: {
-    name: 'Normal',
-    groundColor: 0x90EE90,
-    groundTexture: 'grass',
-    fenceType: 'post',
-    skyColor: 0x6495ED,
+    name: "Normal",
+    groundColor: 0x90ee90,
+    groundTexture: "grass",
+    fenceType: "post",
+    skyColor: 0x6495ed,
   },
   christmas: {
-    name: 'Christmas',
-    groundColor: 0x90EE90,
-    groundTexture: 'grass',
-    fenceType: 'candy-cane',
-    skyColor: 0x87CEEB,
+    name: "Christmas",
+    groundColor: 0x90ee90,
+    groundTexture: "grass",
+    fenceType: "candy-cane",
+    skyColor: 0x87ceeb,
   },
 };
 
-const THEME_STORAGE_KEY = 'reindeer-racing-theme';
+const THEME_STORAGE_KEY = "reindeer-racing-theme";
 
 /**
  * Get current theme from localStorage or default to christmas
  */
 export function getCurrentTheme(): ThemeType {
   const stored = localStorage.getItem(THEME_STORAGE_KEY);
-  if (stored === 'normal' || stored === 'christmas') {
+  if (stored === "normal" || stored === "christmas") {
     return stored;
   }
-  return 'christmas'; // Default theme
+  return "christmas"; // Default theme
 }
 
 /**

@@ -1,15 +1,15 @@
-import * as THREE from 'three';
-import { getCurrentTheme, getThemeConfig, type ThemeType } from './themeConfig';
-import type { HorseData } from './horseStats';
-import { createBannerFabric } from './models/racerBanners';
-import { loadBleachers } from './models/bleachers';
-import { createDistantHills } from './models/distantHills';
-import { createBigScreen, type BigScreenSystem } from './models/bigScreen';
+import * as THREE from "three";
+import type { HorseData } from "./horseStats";
+import { type BigScreenSystem, createBigScreen } from "./models/bigScreen";
+import { loadBleachers } from "./models/bleachers";
+import { createDistantHills } from "./models/distantHills";
+import { createBannerFabric, type RacingBanner } from "./models/racerBanners";
+import { getCurrentTheme, getThemeConfig, type ThemeType } from "./themeConfig";
 
 export interface RaceTrackConfig {
-  length: number;        // Length of straight sections
-  width: number;         // Width of the racing surface
-  radius: number;        // Radius of the curved ends
+  length: number; // Length of straight sections
+  width: number; // Width of the racing surface
+  radius: number; // Radius of the curved ends
   barrierHeight: number; // Height of barriers
   barrierThickness: number; // Thickness of barrier walls
 }
@@ -29,7 +29,7 @@ export class RaceTrack {
       radius: 15,
       barrierHeight: 2,
       barrierThickness: 0.3,
-      ...config
+      ...config,
     };
 
     this.currentTheme = getCurrentTheme();
@@ -67,20 +67,21 @@ export class RaceTrack {
         const material = new THREE.MeshStandardMaterial({
           color: color,
           roughness: 0.8,
-          metalness: 0.2
+          metalness: 0.2,
         });
 
         const squareGeometry = new THREE.BoxGeometry(
           lineThickness,
           0.11, // Slightly taller than track to be visible
-          squareWidth
+          squareWidth,
         );
 
         const square = new THREE.Mesh(squareGeometry, material);
         // Position at the start of the track
         square.position.x = -this.config.length / 2 + rowOffset;
         square.position.y = 0.05;
-        square.position.z = this.config.radius + squareWidth * i + squareWidth / 2;
+        square.position.z =
+          this.config.radius + squareWidth * i + squareWidth / 2;
         square.receiveShadow = true;
         square.castShadow = true;
 
@@ -104,8 +105,17 @@ export class RaceTrack {
     const bannerWidth = this.config.width + 4;
 
     // Posts positioned on inner and outer edges
-    const postGeometry = new THREE.CylinderGeometry(0.15, 0.15, bannerHeight, 8);
-    const postMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00, metalness: 0.3, roughness: 0.7 });
+    const postGeometry = new THREE.CylinderGeometry(
+      0.15,
+      0.15,
+      bannerHeight,
+      8,
+    );
+    const postMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffff00,
+      metalness: 0.3,
+      roughness: 0.7,
+    });
 
     // Inner post
     const innerRadius = this.config.radius - 2;
@@ -113,7 +123,7 @@ export class RaceTrack {
     innerPost.position.set(
       -this.config.length / 2 + Math.cos(angle) * innerRadius,
       bannerHeight / 2,
-      Math.sin(angle) * innerRadius
+      Math.sin(angle) * innerRadius,
     );
     innerPost.castShadow = true;
     this.group.add(innerPost);
@@ -124,14 +134,18 @@ export class RaceTrack {
     outerPost.position.set(
       -this.config.length / 2 + Math.cos(angle) * outerRadius,
       bannerHeight / 2,
-      Math.sin(angle) * outerRadius
+      Math.sin(angle) * outerRadius,
     );
     outerPost.castShadow = true;
     this.group.add(outerPost);
 
     // Banner board (oriented radially across the curve)
     const bannerGeometry = new THREE.BoxGeometry(0.2, 1, bannerWidth);
-    const bannerMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00, metalness: 0.2, roughness: 0.6 });
+    const bannerMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffff00,
+      metalness: 0.2,
+      roughness: 0.6,
+    });
     const banner = new THREE.Mesh(bannerGeometry, bannerMaterial);
     banner.position.set(bannerX, bannerHeight, bannerZ);
     banner.rotation.y = angle + Math.PI / 2; // Perpendicular to the curve radius
@@ -145,50 +159,79 @@ export class RaceTrack {
     const bannerWidth = this.config.width + 4;
 
     // Left post
-    const postGeometry = new THREE.CylinderGeometry(0.15, 0.15, bannerHeight, 8);
-    const postMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.3, roughness: 0.7 });
+    const postGeometry = new THREE.CylinderGeometry(
+      0.15,
+      0.15,
+      bannerHeight,
+      8,
+    );
+    const postMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      metalness: 0.3,
+      roughness: 0.7,
+    });
 
     const leftPost = new THREE.Mesh(postGeometry, postMaterial);
-    leftPost.position.set(-this.config.length / 2, bannerHeight / 2, this.config.radius - 2);
+    leftPost.position.set(
+      -this.config.length / 2,
+      bannerHeight / 2,
+      this.config.radius - 2,
+    );
     leftPost.castShadow = true;
     leftPost.layers.set(1); // Set to layer 1 only (hidden from finish line camera)
     this.group.add(leftPost);
 
     // Right post
     const rightPost = new THREE.Mesh(postGeometry, postMaterial);
-    rightPost.position.set(-this.config.length / 2, bannerHeight / 2, this.config.radius + this.config.width + 2);
+    rightPost.position.set(
+      -this.config.length / 2,
+      bannerHeight / 2,
+      this.config.radius + this.config.width + 2,
+    );
     rightPost.castShadow = true;
     rightPost.layers.set(1); // Set to layer 1 only (hidden from finish line camera)
     this.group.add(rightPost);
 
     // Banner board
     const bannerGeometry = new THREE.BoxGeometry(0.2, 1, bannerWidth);
-    const bannerMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000, metalness: 0.2, roughness: 0.6 });
+    const bannerMaterial = new THREE.MeshStandardMaterial({
+      color: 0xff0000,
+      metalness: 0.2,
+      roughness: 0.6,
+    });
     const banner = new THREE.Mesh(bannerGeometry, bannerMaterial);
-    banner.position.set(-this.config.length / 2, bannerHeight, this.config.radius + this.config.width / 2);
+    banner.position.set(
+      -this.config.length / 2,
+      bannerHeight,
+      this.config.radius + this.config.width / 2,
+    );
     banner.castShadow = true;
     banner.layers.set(1); // Set to layer 1 only (hidden from finish line camera)
     this.group.add(banner);
 
     // Banner text
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     canvas.width = 512;
     canvas.height = 128;
-    const context = canvas.getContext('2d')!;
-    context.fillStyle = '#ff0000';
+    const context = canvas.getContext("2d")!;
+    context.fillStyle = "#ff0000";
     context.fillRect(0, 0, canvas.width, canvas.height);
-    context.fillStyle = '#ffffff';
-    context.font = 'bold 72px Arial';
-    context.textAlign = 'center';
-    context.textBaseline = 'middle';
-    context.fillText('FINISH', canvas.width / 2, canvas.height / 2);
+    context.fillStyle = "#ffffff";
+    context.font = "bold 72px Arial";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText("FINISH", canvas.width / 2, canvas.height / 2);
 
     const texture = new THREE.CanvasTexture(canvas);
     const textMaterial = new THREE.MeshBasicMaterial({ map: texture });
     const textGeometry = new THREE.PlaneGeometry(bannerWidth - 0.5, 0.9);
 
     const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-    textMesh.position.set(-this.config.length / 2 - 0.11, bannerHeight, this.config.radius + this.config.width / 2);
+    textMesh.position.set(
+      -this.config.length / 2 - 0.11,
+      bannerHeight,
+      this.config.radius + this.config.width / 2,
+    );
     textMesh.rotation.y = Math.PI / 2;
     textMesh.layers.set(1); // Set to layer 1 only (hidden from finish line camera)
     this.group.add(textMesh);
@@ -199,7 +242,7 @@ export class RaceTrack {
     const material = new THREE.MeshStandardMaterial({
       color: trackColor,
       roughness: 0.9,
-      metalness: 0.1
+      metalness: 0.1,
     });
 
     // Create straight sections with slight overlap to avoid seams
@@ -207,27 +250,38 @@ export class RaceTrack {
     const straightGeometry = new THREE.BoxGeometry(
       this.config.length + overlap,
       0.1,
-      this.config.width
+      this.config.width,
     );
 
     // Top straight - positioned between inner and outer barriers
     const topStraight = new THREE.Mesh(straightGeometry, material);
-    topStraight.position.set(0, 0, -(this.config.radius + this.config.width / 2));
+    topStraight.position.set(
+      0,
+      0,
+      -(this.config.radius + this.config.width / 2),
+    );
     topStraight.receiveShadow = true;
     this.group.add(topStraight);
 
     // Bottom straight - positioned between inner and outer barriers
     const bottomStraight = new THREE.Mesh(straightGeometry, material);
-    bottomStraight.position.set(0, 0, this.config.radius + this.config.width / 2);
+    bottomStraight.position.set(
+      0,
+      0,
+      this.config.radius + this.config.width / 2,
+    );
     bottomStraight.receiveShadow = true;
     this.group.add(bottomStraight);
 
     // Create curved ends using tube geometry
-    this.createCurvedSection(material, true);  // Right curve
+    this.createCurvedSection(material, true); // Right curve
     this.createCurvedSection(material, false); // Left curve
   }
 
-  private createCurvedSection(material: THREE.Material, isRight: boolean): void {
+  private createCurvedSection(
+    material: THREE.Material,
+    isRight: boolean,
+  ): void {
     const segments = 32;
     const angleStart = isRight ? -Math.PI / 2 : Math.PI / 2;
     const angleEnd = isRight ? Math.PI / 2 : Math.PI * 1.5;
@@ -263,14 +317,16 @@ export class RaceTrack {
 
     const extrudeSettings = {
       depth: 0.1,
-      bevelEnabled: false
+      bevelEnabled: false,
     };
 
     const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
     const mesh = new THREE.Mesh(geometry, material);
     mesh.rotation.x = -Math.PI / 2;
     mesh.position.y = 0; // Position at ground level, same as straight sections
-    mesh.position.x = isRight ? this.config.length / 2 : -this.config.length / 2;
+    mesh.position.x = isRight
+      ? this.config.length / 2
+      : -this.config.length / 2;
     mesh.receiveShadow = true;
 
     this.group.add(mesh);
@@ -278,18 +334,18 @@ export class RaceTrack {
 
   private createBarriers(): void {
     const themeConfig = getThemeConfig(this.currentTheme);
-    const isCandyCane = themeConfig.fenceType === 'candy-cane';
+    const isCandyCane = themeConfig.fenceType === "candy-cane";
 
     const postMaterial = new THREE.MeshStandardMaterial({
       color: isCandyCane ? 0xffffff : 0x8b4513, // White for candy canes, brown for posts
       roughness: 0.7,
-      metalness: 0.1
+      metalness: 0.1,
     });
 
     const railMaterial = new THREE.MeshStandardMaterial({
       color: 0xffffff, // White for rails
       roughness: 0.6,
-      metalness: 0.2
+      metalness: 0.2,
     });
 
     const postSpacing = 4; // Distance between posts
@@ -301,7 +357,7 @@ export class RaceTrack {
       this.config.length,
       -(this.config.radius + this.config.width),
       postSpacing,
-      isCandyCane
+      isCandyCane,
     );
     this.createStraightBarrierWithPosts(
       postMaterial,
@@ -309,7 +365,7 @@ export class RaceTrack {
       this.config.length,
       this.config.radius + this.config.width,
       postSpacing,
-      isCandyCane
+      isCandyCane,
     );
 
     // Inner barriers (straight sections)
@@ -317,9 +373,9 @@ export class RaceTrack {
       postMaterial,
       railMaterial,
       this.config.length,
-      -(this.config.radius),
+      -this.config.radius,
       postSpacing,
-      isCandyCane
+      isCandyCane,
     );
     this.createStraightBarrierWithPosts(
       postMaterial,
@@ -327,14 +383,38 @@ export class RaceTrack {
       this.config.length,
       this.config.radius,
       postSpacing,
-      isCandyCane
+      isCandyCane,
     );
 
     // Curved barriers
-    this.createCurvedBarrierWithPosts(postMaterial, railMaterial, true, true, isCandyCane);   // Right outer
-    this.createCurvedBarrierWithPosts(postMaterial, railMaterial, true, false, isCandyCane);  // Right inner
-    this.createCurvedBarrierWithPosts(postMaterial, railMaterial, false, true, isCandyCane);  // Left outer
-    this.createCurvedBarrierWithPosts(postMaterial, railMaterial, false, false, isCandyCane); // Left inner
+    this.createCurvedBarrierWithPosts(
+      postMaterial,
+      railMaterial,
+      true,
+      true,
+      isCandyCane,
+    ); // Right outer
+    this.createCurvedBarrierWithPosts(
+      postMaterial,
+      railMaterial,
+      true,
+      false,
+      isCandyCane,
+    ); // Right inner
+    this.createCurvedBarrierWithPosts(
+      postMaterial,
+      railMaterial,
+      false,
+      true,
+      isCandyCane,
+    ); // Left outer
+    this.createCurvedBarrierWithPosts(
+      postMaterial,
+      railMaterial,
+      false,
+      false,
+      isCandyCane,
+    ); // Left inner
   }
 
   private createStraightBarrierWithPosts(
@@ -343,7 +423,7 @@ export class RaceTrack {
     length: number,
     zPosition: number,
     postSpacing: number,
-    isCandyCane: boolean
+    isCandyCane: boolean,
   ): void {
     const postRadius = 0.08;
     const postHeight = this.config.barrierHeight;
@@ -359,7 +439,10 @@ export class RaceTrack {
       const x = -length / 2 + i * actualSpacing;
       const post = isCandyCane
         ? this.createCandyCanePost(postHeight)
-        : new THREE.Mesh(new THREE.CylinderGeometry(postRadius, postRadius, postHeight, 8), postMaterial);
+        : new THREE.Mesh(
+            new THREE.CylinderGeometry(postRadius, postRadius, postHeight, 8),
+            postMaterial,
+          );
       post.position.set(x, postHeight / 2, zPosition);
       post.castShadow = true;
       post.receiveShadow = true;
@@ -369,8 +452,13 @@ export class RaceTrack {
     // Create horizontal rails
     const railLength = length;
     for (let rail = 0; rail < numRails; rail++) {
-      const railHeight = postHeight * (rail + 1) / (numRails + 1);
-      const railGeometry = new THREE.CylinderGeometry(railRadius, railRadius, railLength, 8);
+      const railHeight = (postHeight * (rail + 1)) / (numRails + 1);
+      const railGeometry = new THREE.CylinderGeometry(
+        railRadius,
+        railRadius,
+        railLength,
+        8,
+      );
       const railMesh = new THREE.Mesh(railGeometry, railMaterial);
       railMesh.rotation.z = Math.PI / 2;
       railMesh.position.set(0, railHeight, zPosition);
@@ -385,7 +473,7 @@ export class RaceTrack {
     railMaterial: THREE.Material,
     isRight: boolean,
     isOuter: boolean,
-    isCandyCane: boolean
+    isCandyCane: boolean,
   ): void {
     const postRadius = 0.08;
     const postHeight = this.config.barrierHeight;
@@ -414,11 +502,14 @@ export class RaceTrack {
 
       const post = isCandyCane
         ? this.createCandyCanePost(postHeight)
-        : new THREE.Mesh(new THREE.CylinderGeometry(postRadius, postRadius, postHeight, 8), postMaterial);
+        : new THREE.Mesh(
+            new THREE.CylinderGeometry(postRadius, postRadius, postHeight, 8),
+            postMaterial,
+          );
       post.position.set(
         (isRight ? this.config.length / 2 : -this.config.length / 2) + x,
         postHeight / 2,
-        z
+        z,
       );
       post.castShadow = true;
       post.receiveShadow = true;
@@ -441,17 +532,19 @@ export class RaceTrack {
 
     // Create multiple rail levels
     for (let rail = 0; rail < numRails; rail++) {
-      const railHeight = postHeight * (rail + 1) / (numRails + 1);
+      const railHeight = (postHeight * (rail + 1)) / (numRails + 1);
       const tubeGeometry = new THREE.TubeGeometry(
         curve,
         segments,
         railRadius,
         8,
-        false
+        false,
       );
 
       const railMesh = new THREE.Mesh(tubeGeometry, railMaterial);
-      railMesh.position.x = isRight ? this.config.length / 2 : -this.config.length / 2;
+      railMesh.position.x = isRight
+        ? this.config.length / 2
+        : -this.config.length / 2;
       railMesh.position.y = railHeight;
       railMesh.castShadow = true;
       railMesh.receiveShadow = true;
@@ -475,7 +568,9 @@ export class RaceTrack {
   public setRacers(horses: HorseData[]): void {
     this.horses = horses;
     // Remove any existing racer banners
-    this.group.children = this.group.children.filter(child => !(child as any).isRacerBanner);
+    this.group.children = this.group.children.filter(
+      (child) => !(child as RacingBanner).isRacerBanner,
+    );
     // Create new banners
     this.createRacerBanners();
   }
@@ -505,8 +600,12 @@ export class RaceTrack {
    * @param laneOffset - Offset from inner edge (0 = inner barrier, this.config.width = outer barrier)
    * @returns Position on the track
    */
-  public getTrackPosition(progress: number, laneOffset: number = this.config.width / 2): THREE.Vector3 {
-    const totalLength = this.config.length * 2 + Math.PI * this.config.radius * 2;
+  public getTrackPosition(
+    progress: number,
+    laneOffset: number = this.config.width / 2,
+  ): THREE.Vector3 {
+    const totalLength =
+      this.config.length * 2 + Math.PI * this.config.radius * 2;
 
     // Handle progress beyond track length (for deceleration after finish)
     if (progress > totalLength) {
@@ -580,29 +679,47 @@ export class RaceTrack {
       const z = this.config.radius - 2; // Inner edge of bottom straight (inside the track)
 
       // Create pole (matches fence theme)
-      const pole = themeConfig.fenceType === 'candy-cane'
-        ? this.createCandyCanePost(poleHeight)
-        : new THREE.Mesh(
-          new THREE.CylinderGeometry(0.08, 0.08, poleHeight, 8),
-          new THREE.MeshStandardMaterial({ color: 0x8b4513, roughness: 0.7 })
-        );
+      const pole =
+        themeConfig.fenceType === "candy-cane"
+          ? this.createCandyCanePost(poleHeight)
+          : new THREE.Mesh(
+              new THREE.CylinderGeometry(0.08, 0.08, poleHeight, 8),
+              new THREE.MeshStandardMaterial({
+                color: 0x8b4513,
+                roughness: 0.7,
+              }),
+            );
       pole.position.set(x, poleHeight / 2, z);
       pole.castShadow = true;
+      // biome-ignore lint/suspicious/noExplicitAny: Its easier to ignore, than create a new class
       (pole as any).isRacerBanner = true;
       this.group.add(pole);
 
       // Create finial (same color as racer)
       const finial = new THREE.Mesh(
         new THREE.SphereGeometry(0.15, 8, 8),
-        new THREE.MeshStandardMaterial({ color: horse.color, metalness: 0.3, roughness: 0.6 })
+        new THREE.MeshStandardMaterial({
+          color: horse.color,
+          metalness: 0.3,
+          roughness: 0.6,
+        }),
       );
       finial.position.set(x, poleHeight, z);
       finial.castShadow = true;
+      // biome-ignore lint/suspicious/noExplicitAny: Its easier to ignore, than create a new class
       (finial as any).isRacerBanner = true;
       this.group.add(finial);
 
       // Create banner fabric (medieval pointed style)
-      createBannerFabric(x, poleHeight - 0.5, z, bannerWidth, bannerHeight, horse, this.group);
+      createBannerFabric(
+        x,
+        poleHeight - 0.5,
+        z,
+        bannerWidth,
+        bannerHeight,
+        horse,
+        this.group,
+      );
     }
   }
 
@@ -615,14 +732,20 @@ export class RaceTrack {
     for (let i = 0; i < numStripes; i++) {
       const isRed = i % 2 === 0;
       const color = isRed ? 0xff0000 : 0xffffff;
-      const geometry = new THREE.CylinderGeometry(radius, radius, stripeHeight, 8);
+      const geometry = new THREE.CylinderGeometry(
+        radius,
+        radius,
+        stripeHeight,
+        8,
+      );
       const material = new THREE.MeshStandardMaterial({
         color,
         roughness: 0.4,
-        metalness: 0.1
+        metalness: 0.1,
       });
       const stripe = new THREE.Mesh(geometry, material);
-      stripe.position.y = (i - numStripes / 2) * stripeHeight + stripeHeight / 2;
+      stripe.position.y =
+        (i - numStripes / 2) * stripeHeight + stripeHeight / 2;
       stripe.castShadow = true;
       stripe.receiveShadow = true;
       group.add(stripe);
@@ -641,10 +764,12 @@ export class RaceTrack {
     const themeConfig = getThemeConfig(this.currentTheme);
 
     // Update ground color
-    (this.ground.material as THREE.MeshStandardMaterial).color.setHex(themeConfig.groundColor);
+    (this.ground.material as THREE.MeshStandardMaterial).color.setHex(
+      themeConfig.groundColor,
+    );
 
     // Add texture pattern if needed
-    if (themeConfig.groundTexture === 'snow') {
+    if (themeConfig.groundTexture === "snow") {
       // Could add snow texture here if desired
     }
   }

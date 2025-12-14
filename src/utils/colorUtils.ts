@@ -64,7 +64,8 @@ export function getComplementaryColor(color: number): number {
     return p;
   };
 
-  let rComp, gComp, bComp;
+  let rComp: number, gComp: number, bComp: number;
+
   if (s === 0) {
     rComp = gComp = bComp = l;
   } else {

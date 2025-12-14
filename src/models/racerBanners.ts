@@ -1,7 +1,19 @@
-import * as THREE from 'three';
-import type { HorseData } from '../horseStats';
-import { createHat, createFace } from '../horseAccessories';
-import { getComplementaryColor } from '../utils/colorUtils';
+import * as THREE from "three";
+import { createFace, createHat } from "../horseAccessories";
+import type { HorseData } from "../horseStats";
+import { getComplementaryColor } from "../utils/colorUtils";
+
+export class RacingBanner extends THREE.Mesh {
+  private _isRacerBanner: boolean = false;
+
+  public get isRacerBanner(): boolean {
+    return this._isRacerBanner;
+  }
+
+  public set isRacerBanner(v: boolean) {
+    this._isRacerBanner = v;
+  }
+}
 
 /**
  * Generates a 2D preview image of a horse with accessories
@@ -37,10 +49,16 @@ export function generateHorsePreview(horse: HorseData): string {
 
   // Add face
   const faceAccessories = createFace(horse.face, horseMesh);
-  faceAccessories.forEach(accessory => horseMesh.add(accessory));
+  faceAccessories.forEach((accessory) => {
+    horseMesh.add(accessory);
+  });
 
   // Render to canvas
-  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+  const renderer = new THREE.WebGLRenderer({
+    alpha: true,
+    antialias: true,
+    preserveDrawingBuffer: true,
+  });
   renderer.setSize(256, 256);
   renderer.render(scene, camera);
 
@@ -67,35 +85,35 @@ export function createBannerFabric(
   width: number,
   height: number,
   horse: HorseData,
-  group: THREE.Group
+  group: THREE.Group,
 ): void {
   // Create canvas texture with horse render
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = 256;
   canvas.height = 512;
-  const context = canvas.getContext('2d')!;
+  const context = canvas.getContext("2d")!;
 
   // Background (complementary color to racer)
   const complementaryColor = getComplementaryColor(horse.color);
-  context.fillStyle = '#' + complementaryColor.toString(16).padStart(6, '0');
+  context.fillStyle = `#${complementaryColor.toString(16).padStart(6, "0")}`;
   context.fillRect(0, 0, canvas.width, canvas.height);
 
   // Black trim border
-  context.strokeStyle = '#000000';
+  context.strokeStyle = "#000000";
   context.lineWidth = 8;
   context.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
 
   // Draw name text in lower half (split into 2 lines if needed)
-  context.fillStyle = '#000000';
-  context.font = 'bold 32px Arial';
-  context.textAlign = 'center';
-  context.textBaseline = 'middle';
+  context.fillStyle = "#000000";
+  context.font = "bold 32px Arial";
+  context.textAlign = "center";
+  context.textBaseline = "middle";
 
   const name = horse.name;
   const lowerHalfY = canvas.height * 0.75; // Center of lower half
 
   // Split name into 2 lines if it contains a space (preferably at the first space)
-  const firstSpace = name.indexOf(' ');
+  const firstSpace = name.indexOf(" ");
   if (firstSpace > 0 && firstSpace < name.length - 1) {
     // Split at the first space
     const line1 = name.substring(0, firstSpace).trim();
@@ -121,13 +139,13 @@ export function createBannerFabric(
 
   const material = new THREE.MeshBasicMaterial({
     map: texture,
-    side: THREE.DoubleSide
+    side: THREE.DoubleSide,
   });
 
-  const banner = new THREE.Mesh(geometry, material);
+  const banner = new RacingBanner(geometry, material);
   banner.position.set(x, y - height / 2, z + 0.3);
   banner.rotation.y = 0;
-  (banner as any).isRacerBanner = true;
+  banner.isRacerBanner = true;
   group.add(banner);
 
   // Generate horse render asynchronously
@@ -142,14 +160,14 @@ export function createBannerFabric(
       canvas.width / 2 - horseSize / 2,
       upperHalfY - horseSize / 2,
       horseSize,
-      horseSize
+      horseSize,
     );
 
     // Update texture after drawing
     texture.needsUpdate = true;
   };
   img.onerror = (e) => {
-    console.error('Failed to load horse preview image:', e);
+    console.error("Failed to load horse preview image:", e);
   };
   img.src = horseImage;
 }

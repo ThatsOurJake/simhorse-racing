@@ -5,7 +5,7 @@ export {
   createTopHat,
   createCrown,
   createPropellerHat,
-} from './hats';
+} from "./hats";
 
 // Re-export all face functions
 export {
@@ -15,4 +15,4 @@ export {
   applyShockedFaceTexture,
   createRedNose,
   createGlasses,
-} from './faces';
+} from "./faces";

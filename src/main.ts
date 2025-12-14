@@ -1,28 +1,33 @@
-import * as THREE from 'three';
-import './style.css';
-import { RaceTrack } from './raceTrack';
-import { CameraController, CameraMode } from './cameraController';
-import { DebugOverlay } from './debugOverlay';
-import { RaceManager } from './raceManager';
-import { HorseEditor } from './horseEditor';
-import { LeaderboardOverlay } from './leaderboardOverlay';
-import { CameraIndicator } from './cameraIndicator';
-import { RidersOverlay } from './ridersOverlay';
-import { PodiumScene } from './podiumScene';
-import { PhotoFinish } from './photoFinish';
-import { FreeFlyCamera } from './freeFlyCamera';
-import { updateSpectatorAnimations, setRaceActive, startCrowdWave, isCrowdWaveActive } from './models/bleachers';
-import type { HorseData } from './horseStats';
-import { getCurrentTheme, getThemeConfig, type ThemeType } from './themeConfig';
+import * as THREE from "three";
+import "./style.css";
+import { CameraController, CameraMode } from "./cameraController";
+import { CameraIndicator } from "./cameraIndicator";
+import { DebugOverlay } from "./debugOverlay";
+import { FreeFlyCamera } from "./freeFlyCamera";
+import { HorseEditor } from "./horseEditor";
+import type { HorseData } from "./horseStats";
+import { LeaderboardOverlay } from "./leaderboardOverlay";
+import {
+  isCrowdWaveActive,
+  setRaceActive,
+  startCrowdWave,
+  updateSpectatorAnimations,
+} from "./models/bleachers";
+import { PhotoFinish } from "./photoFinish";
+import { PodiumScene } from "./podiumScene";
+import { RaceManager } from "./raceManager";
+import { RaceTrack } from "./raceTrack";
+import { RidersOverlay } from "./ridersOverlay";
+import { getCurrentTheme, getThemeConfig, type ThemeType } from "./themeConfig";
 
 // Screen state management
 const ScreenState = {
-  MAIN: 'main',
-  RIDERS: 'riders',
-  PODIUM: 'podium'
+  MAIN: "main",
+  RIDERS: "riders",
+  PODIUM: "podium",
 } as const;
 
-type ScreenState = typeof ScreenState[keyof typeof ScreenState];
+type ScreenState = (typeof ScreenState)[keyof typeof ScreenState];
 
 let currentScreen: ScreenState = ScreenState.MAIN;
 
@@ -41,7 +46,7 @@ const camera = new THREE.PerspectiveCamera(
   75,
   window.innerWidth / window.innerHeight,
   0.1,
-  1000
+  1000,
 );
 camera.position.set(0, 35, 45);
 camera.lookAt(0, 0, 0);
@@ -73,7 +78,7 @@ const groundGeometry = new THREE.PlaneGeometry(300, 300); // Much larger to hide
 const groundMaterial = new THREE.MeshStandardMaterial({
   color: themeConfig.groundColor,
   roughness: 0.8,
-  metalness: 0.2
+  metalness: 0.2,
 });
 const ground = new THREE.Mesh(groundGeometry, groundMaterial);
 ground.rotation.x = -Math.PI / 2;
@@ -82,9 +87,9 @@ scene.add(ground);
 
 // Create the race track
 const raceTrack = new RaceTrack({
-  length: 60,  // 50% longer straights
-  width: 15,   // 25% wider
-  radius: 20   // Larger curves
+  length: 60, // 50% longer straights
+  width: 15, // 25% wider
+  radius: 20, // Larger curves
 });
 raceTrack.setGround(ground); // Pass ground reference for theme updates
 scene.add(raceTrack.getGroup());
@@ -92,7 +97,7 @@ scene.add(raceTrack.getGroup());
 // Load placeholder image for big screen
 const textureLoader = new THREE.TextureLoader();
 const placeholderTexture = textureLoader.load(
-  '/placeholder.jpeg',
+  "/placeholder.jpeg",
   (texture) => {
     // Texture loaded successfully
     texture.colorSpace = THREE.SRGBColorSpace;
@@ -110,8 +115,8 @@ const placeholderTexture = textureLoader.load(
   },
   undefined,
   (error) => {
-    console.error('Error loading placeholder texture:', error);
-  }
+    console.error("Error loading placeholder texture:", error);
+  },
 );
 
 // Initialize big screen (texture will be applied when loaded)
@@ -137,7 +142,9 @@ debugOverlay.setThemeChangeCallback((newTheme: ThemeType) => {
   scene.background = new THREE.Color(newConfig.skyColor);
 
   // Update ground color
-  (ground.material as THREE.MeshStandardMaterial).color.setHex(newConfig.groundColor);
+  (ground.material as THREE.MeshStandardMaterial).color.setHex(
+    newConfig.groundColor,
+  );
 
   // Update track barriers
   raceTrack.updateTheme(newTheme);
@@ -163,7 +170,7 @@ const trackLength = raceManager.getTrackLength();
 const horseEditor = new HorseEditor(trackLength);
 
 // Set initial racer banners
-const initialHorses = raceManager.getHorses().map(h => h.data);
+const initialHorses = raceManager.getHorses().map((h) => h.data);
 raceTrack.setRacers(initialHorses);
 
 // Listen for horse changes
@@ -184,8 +191,12 @@ raceManager.setPhotoFinishCallback(() => {
     const finishLineSideOffset = trackConfig.width * 0.9; // Same as cameraController
     const finishLineCameraHeight = trackConfig.barrierHeight * 3.5; // Same as cameraController
     return {
-      position: new THREE.Vector3(finishLinePos.x, finishLineCameraHeight, finishLinePos.z + finishLineSideOffset),
-      lookAt: new THREE.Vector3(finishLinePos.x, 0.8, finishLinePos.z)
+      position: new THREE.Vector3(
+        finishLinePos.x,
+        finishLineCameraHeight,
+        finishLinePos.z + finishLineSideOffset,
+      ),
+      lookAt: new THREE.Vector3(finishLinePos.x, 0.8, finishLinePos.z),
     };
   };
 
@@ -193,14 +204,14 @@ raceManager.setPhotoFinishCallback(() => {
 });
 
 // Keyboard controls
-window.addEventListener('keydown', (event) => {
+window.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
 
   // Free fly camera toggle with 'F'
-  if (key === 'f') {
+  if (key === "f") {
     freeFlyCamera.toggle();
     if (freeFlyCamera.isActivated()) {
-      cameraIndicator.update('freeFly');
+      cameraIndicator.update("freeFly");
     } else {
       // When exiting free fly, update to current camera mode
       const currentMode = cameraController.getCurrentMode();
@@ -210,10 +221,10 @@ window.addEventListener('keydown', (event) => {
   }
 
   // Trigger crowd wave with 'T' (works in free cam too)
-  if (key === 't') {
+  if (key === "t") {
     if (currentScreen === ScreenState.MAIN && !isCrowdWaveActive()) {
       startCrowdWave();
-      console.log('Crowd wave triggered!');
+      console.log("Crowd wave triggered!");
     }
     return;
   }
@@ -224,13 +235,13 @@ window.addEventListener('keydown', (event) => {
   }
 
   // Debug overlay toggle
-  if (key === 'd') {
+  if (key === "d") {
     debugOverlay.toggle();
     return;
   }
 
   // Show riders screen with 'Q' (only when not racing)
-  if (key === 'q') {
+  if (key === "q") {
     if (currentScreen === ScreenState.MAIN && !raceManager.isRacing()) {
       // Save overlay states
       wasEditorOpen = horseEditor.isEditorOpen();
@@ -241,13 +252,13 @@ window.addEventListener('keydown', (event) => {
       ridersOverlay.show();
       horseEditor.hide();
       leaderboardOverlay.hide();
-      console.log('Showing riders roster...');
+      console.log("Showing riders roster...");
     }
     return;
   }
 
   // Show podium screen with 'W'
-  if (key === 'w') {
+  if (key === "w") {
     if (currentScreen !== ScreenState.PODIUM) {
       // Save overlay states if coming from main screen
       if (currentScreen === ScreenState.MAIN) {
@@ -264,9 +275,10 @@ window.addEventListener('keydown', (event) => {
       if (horses.length >= 3) {
         currentScreen = ScreenState.PODIUM;
         const leaderboard = raceManager.getLeaderboard();
-        const topThree = leaderboard.slice(0, 3).map(entry =>
-          horses.find(h => h.data.name === entry.name)!
-        ).filter(h => h !== undefined);
+        const topThree = leaderboard
+          .slice(0, 3)
+          .map((entry) => horses.find((h) => h.data.name === entry.name)!)
+          .filter((h) => h !== undefined);
 
         podiumScene.show(topThree);
         ridersOverlay.hide(); // Hide riders roster when showing podium
@@ -274,14 +286,14 @@ window.addEventListener('keydown', (event) => {
         leaderboardOverlay.hide();
         photoFinish.show(); // Show photo finish thumbnail on podium
         cameraIndicator.hide(); // Hide camera overlay on podium
-        console.log('Showing podium...');
+        console.log("Showing podium...");
       }
     }
     return;
   }
 
   // Return to main screen with 'A'
-  if (key === 'a') {
+  if (key === "a") {
     if (currentScreen !== ScreenState.MAIN) {
       currentScreen = ScreenState.MAIN;
       ridersOverlay.hide();
@@ -303,25 +315,29 @@ window.addEventListener('keydown', (event) => {
       }
 
       cameraIndicator.show(); // Show camera overlay when returning to main
-      console.log('Returning to main view...');
+      console.log("Returning to main view...");
     }
     return;
   }
 
   // Start race with 'P' (only if not racing and horses exist)
-  if (key === 'p') {
-    if (currentScreen === ScreenState.MAIN && !raceManager.isRacing() && raceManager.getHorses().length > 0) {
+  if (key === "p") {
+    if (
+      currentScreen === ScreenState.MAIN &&
+      !raceManager.isRacing() &&
+      raceManager.getHorses().length > 0
+    ) {
       horseEditor.close(); // Close editor during race
       leaderboardOverlay.reset(); // Reset leaderboard
       raceManager.startRace();
       setRaceActive(true); // Activate excited spectator animations
-      console.log('Race starting...');
+      console.log("Race starting...");
     }
     return;
   }
 
   // Toggle horse editor with 'E'
-  if (key === 'e') {
+  if (key === "e") {
     if (currentScreen === ScreenState.MAIN && !raceManager.isRacing()) {
       horseEditor.toggle();
     }
@@ -329,19 +345,19 @@ window.addEventListener('keydown', (event) => {
   }
 
   // Toggle leaderboard with 'L'
-  if (key === 'l') {
+  if (key === "l") {
     leaderboardOverlay.toggle();
     return;
   }
 
   // Reset race with 'R'
-  if (key === 'r') {
+  if (key === "r") {
     if (raceManager.getHorses().length > 0) {
       raceManager.resetRace();
       leaderboardOverlay.reset();
       photoFinish.clear(); // Clear photo finish on race reset
       setRaceActive(false); // Return spectators to calm animations
-      console.log('Race reset!');
+      console.log("Race reset!");
     }
     return;
   }
@@ -354,35 +370,42 @@ window.addEventListener('keydown', (event) => {
   const horses = raceManager.getHorses();
   const leaderboard = raceManager.getLeaderboard();
 
-  if (key === '0') {
+  if (key === "0") {
     cameraController.setMode(CameraMode.ORBITAL);
-    cameraIndicator.update('orbital');
-    console.log('Camera: Orbital View');
-  } else if (key === '9') {
+    cameraIndicator.update("orbital");
+    console.log("Camera: Orbital View");
+  } else if (key === "9") {
     cameraController.setMode(CameraMode.FOLLOW);
-    cameraIndicator.update('follow');
-    console.log('Camera: Follow View');
-  } else if (key === '-') {
+    cameraIndicator.update("follow");
+    console.log("Camera: Follow View");
+  } else if (key === "-") {
     cameraController.setMode(CameraMode.FINISH_LINE);
-    cameraIndicator.update('finishLine');
-    console.log('Camera: Finish Line View');
-  } else if (key >= '1' && key <= '8') {
-    const horseIndex = parseInt(key) - 1;
+    cameraIndicator.update("finishLine");
+    console.log("Camera: Finish Line View");
+  } else if (key >= "1" && key <= "8") {
+    const horseIndex = parseInt(key, 10) - 1;
     if (horseIndex < horses.length) {
       const isRacing = raceManager.isRacing();
-      const leaderboardOrder = leaderboard.map(entry => entry.name);
-      cameraController.setMode(CameraMode.HORSE, horseIndex, undefined, isRacing, leaderboardOrder);
-      const horseName = isRacing && horseIndex < leaderboardOrder.length
-        ? leaderboardOrder[horseIndex]
-        : horses[horseIndex].data.name;
-      cameraIndicator.update('horse', horseName);
+      const leaderboardOrder = leaderboard.map((entry) => entry.name);
+      cameraController.setMode(
+        CameraMode.HORSE,
+        horseIndex,
+        undefined,
+        isRacing,
+        leaderboardOrder,
+      );
+      const horseName =
+        isRacing && horseIndex < leaderboardOrder.length
+          ? leaderboardOrder[horseIndex]
+          : horses[horseIndex].data.name;
+      cameraIndicator.update("horse", horseName);
       console.log(`Camera: Horse ${key} View`);
     }
   }
 });
 
 // Handle window resize
-window.addEventListener('resize', () => {
+window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -427,13 +450,17 @@ function animate() {
 
   // Get leaderboard order for camera positioning during race
   const leaderboard = raceManager.getLeaderboard();
-  const leaderboardOrderedHorses = leaderboard.map(entry =>
-    horses.find(h => h.data.name === entry.name)!
-  ).filter(h => h !== undefined);
-  const leaderboardPositions = leaderboardOrderedHorses.map(h => h.mesh.position);
-  const leaderboardProgress = leaderboardOrderedHorses.map(h => h.progress);
-  const horseNames = horses.map(h => h.data.name);
-  const leaderboardHorseNames = leaderboardOrderedHorses.map(h => h.data.name);
+  const leaderboardOrderedHorses = leaderboard
+    .map((entry) => horses.find((h) => h.data.name === entry.name)!)
+    .filter((h) => h !== undefined);
+  const leaderboardPositions = leaderboardOrderedHorses.map(
+    (h) => h.mesh.position,
+  );
+  const leaderboardProgress = leaderboardOrderedHorses.map((h) => h.progress);
+  const horseNames = horses.map((h) => h.data.name);
+  const leaderboardHorseNames = leaderboardOrderedHorses.map(
+    (h) => h.data.name,
+  );
 
   // Update free fly camera if active, otherwise update normal camera controller
   if (freeFlyCamera.isActivated()) {
@@ -445,10 +472,11 @@ function animate() {
       trackCenter,
       getTrackPosition,
       leadHorseProgress,
-      raceManager.isRacing() ? leaderboardProgress : horses.map(h => h.progress),
+      raceManager.isRacing()
+        ? leaderboardProgress
+        : horses.map((h) => h.progress),
       raceManager.isRacing(),
-      leaderboard.map(entry => entry.name),
-      raceManager.isRacing() ? leaderboardHorseNames : horseNames
+      raceManager.isRacing() ? leaderboardHorseNames : horseNames,
     );
   }
 
@@ -460,7 +488,7 @@ function animate() {
       bigScreen.updateFollowCamera(
         raceManager.isRacing() ? leaderboardPositions : horsePositions,
         getTrackPosition,
-        leadHorseProgress
+        leadHorseProgress,
       );
 
       // Render the follow camera view to the render target

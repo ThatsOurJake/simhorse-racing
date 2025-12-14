@@ -1,14 +1,14 @@
-import * as THREE from 'three';
-import type { RaceTrackConfig } from './raceTrack';
+import * as THREE from "three";
+import type { RaceTrackConfig } from "./raceTrack";
 
 export const CameraMode = {
-  ORBITAL: 'orbital',
-  FOLLOW: 'follow',
-  HORSE: 'horse',
-  FINISH_LINE: 'finishLine'
+  ORBITAL: "orbital",
+  FOLLOW: "follow",
+  HORSE: "horse",
+  FINISH_LINE: "finishLine",
 } as const;
 
-export type CameraMode = typeof CameraMode[keyof typeof CameraMode];
+export type CameraMode = (typeof CameraMode)[keyof typeof CameraMode];
 
 export interface CameraTarget {
   position: THREE.Vector3;
@@ -39,12 +39,16 @@ export class CameraController {
     // Calculate orbital camera position based on track size
     // Position should be high enough to see the whole track
     const trackDiagonal = Math.sqrt(
-      Math.pow(trackConfig.length, 2) +
-      Math.pow((trackConfig.radius + trackConfig.width) * 2, 2)
+      trackConfig.length ** 2 +
+        ((trackConfig.radius + trackConfig.width) * 2) ** 2,
     );
     const orbitalHeight = trackDiagonal * 0.4; // 40% of diagonal for closer view
     const orbitalDistance = trackDiagonal * 0.6; // 60% of diagonal for zoomed in angle
-    this.ORBITAL_POSITION = new THREE.Vector3(0, orbitalHeight, orbitalDistance);
+    this.ORBITAL_POSITION = new THREE.Vector3(
+      0,
+      orbitalHeight,
+      orbitalDistance,
+    );
     this.ORBITAL_LOOKAT = new THREE.Vector3(0, 0, 0);
 
     // Calculate finish line camera settings based on track width
@@ -63,18 +67,27 @@ export class CameraController {
     leadHorseProgress?: number,
     horseProgressList?: number[],
     isRacing?: boolean,
-    leaderboardOrder?: string[],
-    horseNames?: string[]
+    horseNames?: string[],
   ): void {
     switch (this.currentMode) {
       case CameraMode.ORBITAL:
         this.updateOrbitalCamera();
         break;
       case CameraMode.FOLLOW:
-        this.updateFollowCamera(horsePositions, getTrackPosition, leadHorseProgress);
+        this.updateFollowCamera(
+          horsePositions,
+          getTrackPosition,
+          leadHorseProgress,
+        );
         break;
       case CameraMode.HORSE:
-        this.updateHorseCamera(horsePositions, getTrackPosition, horseProgressList, isRacing, leaderboardOrder, horseNames);
+        this.updateHorseCamera(
+          horsePositions,
+          getTrackPosition,
+          horseProgressList,
+          isRacing,
+          horseNames,
+        );
         break;
       case CameraMode.FINISH_LINE:
         this.updateFinishLineCamera(getTrackPosition);
@@ -96,14 +109,15 @@ export class CameraController {
   private updateFollowCamera(
     horsePositions: THREE.Vector3[],
     getTrackPosition?: (progress: number, laneOffset?: number) => THREE.Vector3,
-    leadHorseProgress?: number
+    leadHorseProgress?: number,
   ): void {
     if (horsePositions.length === 0) return;
 
     // If we have track position function and lead horse progress, use proper track following
     if (getTrackPosition && leadHorseProgress !== undefined) {
       // Position camera AHEAD of the leader by the configured distance (to face them)
-      const cameraProgress = leadHorseProgress + this.FOLLOW_CAM_BEHIND_DISTANCE;
+      const cameraProgress =
+        leadHorseProgress + this.FOLLOW_CAM_BEHIND_DISTANCE;
 
       // Get camera position on track (center lane)
       const cameraTrackPos = getTrackPosition(cameraProgress);
@@ -112,7 +126,7 @@ export class CameraController {
       const cameraPosition = new THREE.Vector3(
         cameraTrackPos.x,
         this.FOLLOW_CAM_HEIGHT,
-        cameraTrackPos.z
+        cameraTrackPos.z,
       );
 
       // Smooth camera movement
@@ -134,7 +148,13 @@ export class CameraController {
       const leadHorse = horsePositions[0];
       const cameraPosition = new THREE.Vector3()
         .copy(leadHorse)
-        .add(new THREE.Vector3(this.FOLLOW_CAM_BEHIND_DISTANCE, this.FOLLOW_CAM_HEIGHT, 0));
+        .add(
+          new THREE.Vector3(
+            this.FOLLOW_CAM_BEHIND_DISTANCE,
+            this.FOLLOW_CAM_HEIGHT,
+            0,
+          ),
+        );
 
       this.camera.position.lerp(cameraPosition, 0.08);
       this.camera.lookAt(leadHorse);
@@ -146,15 +166,15 @@ export class CameraController {
     getTrackPosition?: (progress: number, laneOffset?: number) => THREE.Vector3,
     horseProgressList?: number[],
     isRacing?: boolean,
-    leaderboardOrder?: string[],
-    horseNames?: string[]
+    horseNames?: string[],
   ): void {
     // Determine which horse index to follow
     let actualHorseIndex = this.selectedHorseIndex;
 
     // During race, if we have a locked horse, find its current index
     if (isRacing && this.lockedHorseName && horseNames) {
-      const lockedIndex = horseNames.findIndex(name => name === this.lockedHorseName);
+      const lockedIndex = horseNames.indexOf(this.lockedHorseName);
+
       if (lockedIndex !== -1) {
         actualHorseIndex = lockedIndex;
       }
@@ -165,7 +185,11 @@ export class CameraController {
     const horsePos = horsePositions[actualHorseIndex];
 
     // If we have track position function and horse progress, follow the track
-    if (getTrackPosition && horseProgressList && horseProgressList[actualHorseIndex] !== undefined) {
+    if (
+      getTrackPosition &&
+      horseProgressList &&
+      horseProgressList[actualHorseIndex] !== undefined
+    ) {
       const horseProgress = horseProgressList[actualHorseIndex];
 
       // Position camera BEHIND the horse by 6 units (same as follow cam distance)
@@ -178,14 +202,16 @@ export class CameraController {
       const cameraPosition = new THREE.Vector3(
         cameraTrackPos.x,
         this.FOLLOW_CAM_HEIGHT, // Use same height as follow camera
-        cameraTrackPos.z
+        cameraTrackPos.z,
       );
 
       // Smooth camera following
       this.camera.position.lerp(cameraPosition, 0.1);
 
       // Look at the horse at head height
-      const lookAtPoint = new THREE.Vector3().copy(horsePos).setY(horsePos.y + 1);
+      const lookAtPoint = new THREE.Vector3()
+        .copy(horsePos)
+        .setY(horsePos.y + 1);
 
       this.camera.lookAt(lookAtPoint);
     } else {
@@ -193,23 +219,27 @@ export class CameraController {
       const cameraOffset = new THREE.Vector3(
         -4, // Behind the horse
         2, // Height above horse
-        0 // No side offset
+        0, // No side offset
       );
 
-      const cameraPosition = new THREE.Vector3().copy(horsePos).add(cameraOffset);
+      const cameraPosition = new THREE.Vector3()
+        .copy(horsePos)
+        .add(cameraOffset);
 
       // Smooth camera following
       this.camera.position.lerp(cameraPosition, 0.1);
 
       // Look at the horse at head height
-      const lookAtPoint = new THREE.Vector3().copy(horsePos).setY(horsePos.y + 1);
+      const lookAtPoint = new THREE.Vector3()
+        .copy(horsePos)
+        .setY(horsePos.y + 1);
 
       this.camera.lookAt(lookAtPoint);
     }
   }
 
   private updateFinishLineCamera(
-    getTrackPosition?: (progress: number, laneOffset?: number) => THREE.Vector3
+    getTrackPosition?: (progress: number, laneOffset?: number) => THREE.Vector3,
   ): void {
     if (!getTrackPosition) return;
 
@@ -223,7 +253,7 @@ export class CameraController {
     const cameraPosition = new THREE.Vector3(
       finishLinePos.x, // Align camera X position with finish line
       this.finishLineCameraHeight, // Height to see over barriers
-      finishLinePos.z + this.finishLineSideOffset // Position to the side along Z
+      finishLinePos.z + this.finishLineSideOffset, // Position to the side along Z
     );
 
     // Smooth camera movement
@@ -233,15 +263,24 @@ export class CameraController {
     const lookAtPosition = new THREE.Vector3(
       finishLinePos.x,
       0.8, // Below horse height for downward tilt
-      finishLinePos.z
+      finishLinePos.z,
     );
 
     this.camera.lookAt(lookAtPosition);
   }
 
-  public setMode(mode: CameraMode, horseIndex?: number, horseName?: string, isRacing?: boolean, leaderboardOrder?: string[]): void {
+  public setMode(
+    mode: CameraMode,
+    horseIndex?: number,
+    horseName?: string,
+    isRacing?: boolean,
+    leaderboardOrder?: string[],
+  ): void {
     // Re-enable layer 1 when switching away from finish line camera
-    if (this.currentMode === CameraMode.FINISH_LINE && mode !== CameraMode.FINISH_LINE) {
+    if (
+      this.currentMode === CameraMode.FINISH_LINE &&
+      mode !== CameraMode.FINISH_LINE
+    ) {
       this.camera.layers.enable(1);
     }
 
@@ -251,7 +290,11 @@ export class CameraController {
       this.selectedHorseIndex = horseIndex;
 
       // If racing, lock to the specific horse at this leaderboard position
-      if (isRacing && leaderboardOrder && horseIndex < leaderboardOrder.length) {
+      if (
+        isRacing &&
+        leaderboardOrder &&
+        horseIndex < leaderboardOrder.length
+      ) {
         this.lockedHorseName = leaderboardOrder[horseIndex];
       } else if (horseName) {
         this.lockedHorseName = horseName;

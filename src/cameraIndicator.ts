@@ -1,4 +1,4 @@
-import type { CameraMode } from './cameraController';
+import type { CameraMode } from "./cameraController";
 
 export class CameraIndicator {
   private overlayElement: HTMLDivElement;
@@ -11,8 +11,8 @@ export class CameraIndicator {
   }
 
   private createOverlay(): HTMLDivElement {
-    const overlay = document.createElement('div');
-    overlay.id = 'camera-indicator';
+    const overlay = document.createElement("div");
+    overlay.id = "camera-indicator";
     overlay.style.cssText = `
       position: fixed;
       top: 20px;
@@ -30,39 +30,42 @@ export class CameraIndicator {
       text-align: center;
       font-weight: bold;
     `;
-    overlay.innerHTML = this.getCameraDisplayText('orbital');
+    overlay.innerHTML = this.getCameraDisplayText("orbital");
     return overlay;
   }
 
-  private getCameraDisplayText(mode: CameraMode | 'freeFly', horseName?: string): string {
+  private getCameraDisplayText(
+    mode: CameraMode | "freeFly",
+    horseName?: string,
+  ): string {
     switch (mode) {
-      case 'orbital':
-        return '📷 Orbital View';
-      case 'follow':
-        return '📷 Follow Leader';
-      case 'horse':
-        return horseName ? `📷 Spectating ${horseName}` : '📷 Horse View';
-      case 'finishLine':
-        return '📷 Finish Line';
-      case 'freeFly':
-        return '📷 Free Fly Camera';
+      case "orbital":
+        return "📷 Orbital View";
+      case "follow":
+        return "📷 Follow Leader";
+      case "horse":
+        return horseName ? `📷 Spectating ${horseName}` : "📷 Horse View";
+      case "finishLine":
+        return "📷 Finish Line";
+      case "freeFly":
+        return "📷 Free Fly Camera";
       default:
-        return '📷 Camera View';
+        return "📷 Camera View";
     }
   }
 
-  public update(mode: CameraMode | 'freeFly', horseName?: string): void {
+  public update(mode: CameraMode | "freeFly", horseName?: string): void {
     this.overlayElement.innerHTML = this.getCameraDisplayText(mode, horseName);
   }
 
   public show(): void {
     this.isVisible = true;
-    this.overlayElement.style.display = 'block';
+    this.overlayElement.style.display = "block";
   }
 
   public hide(): void {
     this.isVisible = false;
-    this.overlayElement.style.display = 'none';
+    this.overlayElement.style.display = "none";
   }
 
   public isShown(): boolean {
