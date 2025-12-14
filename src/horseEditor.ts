@@ -18,6 +18,63 @@ import {
 import { type RaceConfig, validateRaceConfig } from "./raceConfigSchema";
 import { SpeedGraph } from "./speedGraph";
 
+const hats: (
+  | "horse-ears"
+  | "reindeer-antlers"
+  | "top-hat"
+  | "crown"
+  | "propeller-hat"
+)[] = [
+    "horse-ears",
+    "reindeer-antlers",
+    "top-hat",
+    "crown",
+    "propeller-hat",
+  ];
+
+const faces: (
+  | "happy"
+  | "innocent"
+  | "red-nose"
+  | "angry"
+  | "shocked"
+  | "glasses"
+)[] = ["happy", "innocent", "red-nose", "angry", "shocked", "glasses"];
+
+const colors = [
+  0xff6b6b, // Red
+  0x4ecdc4, // Cyan
+  0xffe66d, // Yellow
+  0x95e1d3, // Mint
+  0xf38181, // Pink
+  0xaa96da, // Purple
+  0xfcbad3, // Light pink
+  0xa8d8ea, // Light blue
+  0x3a6351, // Deep green
+  0x364f6b, // Navy blue
+  0xf7b801, // Gold
+  0x43dde6, // Bright cyan
+  0x7d5fff, // Violet
+  0x232931, // Charcoal
+  0x393e46, // Slate
+  0x00b894, // Teal
+  0x00cec9, // Aqua
+  0x636e72, // Grey
+  0xd35400, // Orange
+  0x6ab04c, // Green
+  0xeb4d4b, // Crimson
+  0x4834d4, // Royal blue
+  0x130f40, // Midnight blue
+  0xf8a5c2, // Pastel pink
+  0x574b90, // Indigo
+  0x30336b, // Dark indigo
+  0x95afc0, // Pale blue
+  0x535c68, // Gunmetal
+  0x1abc9c, // Turquoise
+  0x2ecc71, // Emerald
+  0xe17055, // Coral
+];
+
 export class HorseEditor {
   private container: HTMLDivElement;
   private horses: HorseData[] = [];
@@ -57,11 +114,11 @@ export class HorseEditor {
 
     const descriptive =
       this.nameData.descriptiveWords[
-        Math.floor(Math.random() * this.nameData.descriptiveWords.length)
+      Math.floor(Math.random() * this.nameData.descriptiveWords.length)
       ];
     const christmasItem =
       this.nameData.christmasItems[
-        Math.floor(Math.random() * this.nameData.christmasItems.length)
+      Math.floor(Math.random() * this.nameData.christmasItems.length)
       ];
 
     return `${descriptive} ${christmasItem}`;
@@ -90,6 +147,20 @@ export class HorseEditor {
     });
 
     this.attachEventListeners(container);
+  }
+
+  private generateHorse(): HorseData {
+    const horseIndex = Math.floor(Math.random() * 1000);
+
+    return {
+      id: `horse-${Date.now()}-${Math.random()}`,
+      name: this.generateRandomName(),
+      stats: generateRandomStats(),
+      baseSpeed: generateBaseSpeed(this.raceSeed, horseIndex),
+      color: this.generateHorseColor(horseIndex),
+      hat: hats[Math.floor(Math.random() * hats.length)],
+      face: faces[Math.floor(Math.random() * faces.length)],
+    };
   }
 
   private renderHorseList(): string {
@@ -254,18 +325,7 @@ export class HorseEditor {
 
   private addHorse(): void {
     if (this.horses.length >= 8) return;
-
-    const horseIndex = this.horses.length;
-    const horse: HorseData = {
-      id: `horse-${Date.now()}-${Math.random()}`,
-      name: this.generateRandomName(),
-      stats: generateRandomStats(),
-      baseSpeed: generateBaseSpeed(this.raceSeed, horseIndex),
-      color: this.generateHorseColor(horseIndex),
-      hat: "horse-ears",
-      face: "happy",
-    };
-
+    const horse = this.generateHorse()
     this.horses.push(horse);
     this.editingHorseId = horse.id;
     this.notifyHorsesChanged();
@@ -289,38 +349,7 @@ export class HorseEditor {
 
     // Add 8 random horses
     for (let i = 0; i < 8; i++) {
-      const hats: (
-        | "horse-ears"
-        | "reindeer-antlers"
-        | "top-hat"
-        | "crown"
-        | "propeller-hat"
-      )[] = [
-        "horse-ears",
-        "reindeer-antlers",
-        "top-hat",
-        "crown",
-        "propeller-hat",
-      ];
-      const faces: (
-        | "happy"
-        | "innocent"
-        | "red-nose"
-        | "angry"
-        | "shocked"
-        | "glasses"
-      )[] = ["happy", "innocent", "red-nose", "angry", "shocked", "glasses"];
-
-      const horse: HorseData = {
-        id: `horse-${Date.now()}-${Math.random()}`,
-        name: this.generateRandomName(),
-        stats: generateRandomStats(),
-        baseSpeed: generateBaseSpeed(this.raceSeed, i),
-        color: this.generateHorseColor(i),
-        hat: hats[Math.floor(Math.random() * hats.length)],
-        face: faces[Math.floor(Math.random() * faces.length)],
-      };
-      this.horses.push(horse);
+      this.horses.push(this.generateHorse());
     }
 
     this.notifyHorsesChanged();
@@ -477,17 +506,11 @@ export class HorseEditor {
   }
 
   private generateHorseColor(index: number): number {
-    const colors = [
-      0xff6b6b, // Red
-      0x4ecdc4, // Cyan
-      0xffe66d, // Yellow
-      0x95e1d3, // Mint
-      0xf38181, // Pink
-      0xaa96da, // Purple
-      0xfcbad3, // Light pink
-      0xa8d8ea, // Light blue
-    ];
-    return colors[index % colors.length];
+    // Use the index as a seed for picking a color deterministically
+    const seed = (index * 9301 + 49297) % 233280;
+    const rand = (seed / 233280);
+    const colorIndex = Math.floor(rand * colors.length);
+    return colors[colorIndex];
   }
 
   private clamp(value: number, min: number, max: number): number {

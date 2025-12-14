@@ -113,8 +113,8 @@ export function generateBaseSpeed(seed: number, horseIndex: number): number {
   const x = Math.sin(seed + horseIndex * 12345.6789) * 10000;
   const random = x - Math.floor(x);
 
-  // Map to 6-10 range
-  return 6 + random * 4;
+  // Map to 8-10 range
+  return 8 + random * 2;
 }
 
 /**
